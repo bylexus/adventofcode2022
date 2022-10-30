@@ -4,7 +4,7 @@
 /// As always, I participate in Adventofcode (https://adventofcode.com/),
 /// this time I will use Rust - a new year, a new language :-)
 ///
-use adventofcode2022::problems::{Day1, Day2021_01, Problem};
+use adventofcode2022::problems::{Day1, Day2021_01, Problem, Day2021_02};
 
 use std::{collections::HashMap, env, time::SystemTime};
 
@@ -15,10 +15,11 @@ fn create_problems() -> HashMap<String, Box<dyn Problem>> {
     let mut problems: HashMap<String, Box<dyn Problem>> = HashMap::new();
     // define all problems:
     // Test problems
-    problems.insert(String::from("2022-1"), Box::new(Day2021_01::new()));
+    problems.insert(String::from("2021-01"), Box::new(Day2021_01::new()));
+    problems.insert(String::from("2021-02"), Box::new(Day2021_02::new()));
 
     // AoC 2022 problems
-    problems.insert(String::from("1"), Box::new(Day1::new()));
+    problems.insert(String::from("01"), Box::new(Day1::new()));
 
     return problems;
 }
@@ -48,13 +49,16 @@ fn main() {
         let p = problems.get_mut(&key).expect("Oops - unknown problem.");
         println!("\n\n{}: {}", key, p.title());
 
+        let mut start = SystemTime::now();
         p.setup();
+        let mut duration = SystemTime::now().duration_since(start).unwrap();
+        println!("    Setup time: took: {:?}", duration);
 
         print!("    Solving Problem 1... ");
-        let mut start = SystemTime::now();
+        start = SystemTime::now();
         p.solve_problem1();
-        let mut duration = SystemTime::now().duration_since(start).unwrap();
-        println!("took: {:?}ms", duration);
+        duration = SystemTime::now().duration_since(start).unwrap();
+        println!("took: {:?}", duration);
 
         print!("    Solving Problem 2... ");
         start = SystemTime::now();
@@ -62,13 +66,13 @@ fn main() {
         duration = SystemTime::now().duration_since(start).unwrap();
         println!("took: {:?}", duration);
 
-        println!("    Solution to Problem 1: {}", p.solution_problem1());
-        println!("    Solution to Problem 2: {}", p.solution_problem2());
+        println!("    \x1B[1;97mSolution\x1B[0m to Problem 1: \x1B[1;97m{}\x1B[0m", p.solution_problem1());
+        println!("    \x1B[1;97mSolution\x1B[0m to Problem 2: \x1B[1;97m{}\x1B[0m", p.solution_problem2());
     }
 
     let global_duration = SystemTime::now().duration_since(global_start).unwrap();
     println!(
-        "\n\nDone! All in all, it took {:?}",
+        "\n\n\x1B[0;32mDone! All in all, it took {:?}\x1B[0m",
         global_duration
     );
 }

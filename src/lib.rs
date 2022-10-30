@@ -11,6 +11,15 @@ pub fn read_lines(file: &str) -> Vec<String> {
     buffered_reader.lines().map(|res| res.unwrap()).collect()
 }
 
+pub fn split_lines(lines: &Vec<String>, separator: &str) -> Vec<Vec<String>> {
+    let lines: Vec<Vec<String>> = lines
+        .iter()
+        .filter(|l| l.trim().len() > 0)
+        .map(|s| s.split(separator).map(|el| String::from(el)).collect())
+        .collect();
+    lines
+}
+
 pub fn lines_to_numbers(lines: &Vec<String>) -> Vec<i64> {
     let lines: Vec<i64> = lines
         .iter()
