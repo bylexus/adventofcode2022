@@ -9,8 +9,8 @@ pub trait Problem {
 	fn solution_problem2(&self) -> String;
 }
 
-mod day1;
-pub use day1::Day1;
+mod day01;
+pub use day01::Day01;
 
 mod day_2021_01;
 pub use day_2021_01::Day2021_01;
