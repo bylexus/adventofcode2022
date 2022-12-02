@@ -172,36 +172,37 @@ impl Problem for Day02 {
     }
 
     fn solve_problem1(&mut self) {
-        let mut score = 0;
-        for draw in &self.input1 {
-            // draw hand score:
-            score += draw.1.value();
-
-            // draw battle score:
-            score += draw.1.fight_against(&draw.0).points();
-        }
-        self.solution1 = score;
+        self.solution1 = self
+            .input1
+            .iter()
+            .map(|draw| 
+                // draw hand score:
+                draw.1.value()
+                
+                // draw battle score:
+                + draw.1.fight_against(&draw.0).points())
+            .sum();
     }
     fn solve_problem2(&mut self) {
-        let mut score = 0;
-        for draw in &self.input2 {
-            // add fight score:
-            score += draw.1.points();
-
-            // add draw score:
-            // we need to select the opposite result against the whished result,
-            // as we only know the OTHER's hand:
-            // So we fight as opponent of the elve:
-            score += (match draw.1 {
-                PlayResult::Draw => draw.0.select_card(&PlayResult::Draw),
-                PlayResult::Win => draw.0.select_card(&PlayResult::Loose),
-                PlayResult::Loose => draw.0.select_card(&PlayResult::Win),
-                _ => Hand::Unknown,
+        self.solution2 = self
+            .input2
+            .iter()
+            .map(|draw| {
+                // add fight score:
+                draw.1.points()
+                    // add draw score:
+                    // we need to select the opposite result against the whished result,
+                    // as we only know the OTHER's hand:
+                    // So we fight as opponent of the elve:
+                    + (match draw.1 {
+                        PlayResult::Draw => draw.0.select_card(&PlayResult::Draw),
+                        PlayResult::Win => draw.0.select_card(&PlayResult::Loose),
+                        PlayResult::Loose => draw.0.select_card(&PlayResult::Win),
+                        _ => Hand::Unknown,
+                    })
+                    .value()
             })
-            .value();
-        }
-
-        self.solution2 = score;
+            .sum();
     }
 
     fn solution_problem1(&self) -> String {
