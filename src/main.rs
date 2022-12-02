@@ -50,22 +50,26 @@ fn main() {
         let p = problems.get_mut(&key).expect("Oops - unknown problem.");
         println!("\n\n{}: {}", key, p.title());
 
-        let mut start = SystemTime::now();
+        let start = SystemTime::now();
         p.setup();
-        let mut duration = SystemTime::now().duration_since(start).unwrap();
+        let duration = SystemTime::now().duration_since(start).unwrap();
         println!("    Setup time: took: {:?}", duration);
 
         print!("    Solving Problem 1... ");
-        start = SystemTime::now();
+        let start1 = SystemTime::now();
         p.solve_problem1();
-        duration = SystemTime::now().duration_since(start).unwrap();
+        let duration = SystemTime::now().duration_since(start1).unwrap();
         println!("took: {:?}", duration);
 
         print!("    Solving Problem 2... ");
-        start = SystemTime::now();
+        let start2 = SystemTime::now();
         p.solve_problem2();
-        duration = SystemTime::now().duration_since(start).unwrap();
+        let duration = SystemTime::now().duration_since(start2).unwrap();
         println!("took: {:?}", duration);
+
+        print!("    Total solving time:  ");
+        let duration = SystemTime::now().duration_since(start).unwrap();
+        println!("{:?}", duration);
 
         println!("    \x1B[1;97mSolution\x1B[0m to Problem 1: \x1B[1;97m{}\x1B[0m", p.solution_problem1());
         println!("    \x1B[1;97mSolution\x1B[0m to Problem 2: \x1B[1;97m{}\x1B[0m", p.solution_problem2());
