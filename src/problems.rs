@@ -12,6 +12,9 @@ pub trait Problem {
 mod day01;
 pub use day01::Day01;
 
+mod day02;
+pub use day02::Day02;
+
 mod day_2021_01;
 pub use day_2021_01::Day2021_01;
 
