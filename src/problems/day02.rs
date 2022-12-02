@@ -80,7 +80,66 @@ impl Problem for Day02 {
         self.solution1 = score;
     }
     fn solve_problem2(&mut self) {
-        self.solution2 = 0;
+        // A = r (rock)
+        // B = p (paper)
+        // C = s (sisor)
+
+        // X = r (rock)
+        // Y = p (paper)
+        // Z = s (sisor)
+        let mut score = 0;
+        for draw in &self.input {
+            let draw = *draw;
+            // must loose:
+            if draw.1 == 'r' {
+                // r = X --> loose
+                // draw score:
+                if draw.0 == 'r' {
+                    // draw a sisor (3): rock beats sisor:
+                    score += 3;
+                }
+                if draw.0 == 'p' {
+                    // draw a rock (1): paper beats rock:
+                    score += 1;
+                }
+                if draw.0 == 's' {
+                    // draw a paper (2): sisor beats paper:
+                    score += 2;
+                }
+
+            // p = Y --> draw
+            } else if draw.1 == 'p' {
+                // draw score:
+                if draw.0 == 'r' {
+                    // draw a rock, too, plus 3 for draw:
+                    score += 1 + 3;
+                }
+                if draw.0 == 'p' {
+                    // draw a paper, too, plus 3 for draw:
+                    score += 2 + 3;
+                }
+                if draw.0 == 's' {
+                    // draw a sisor, too, plus 3 for draw:
+                    score += 3 + 3;
+                }
+            // s = Z --> win
+            } else if draw.1 == 's' {
+                // draw score:
+                if draw.0 == 'r' {
+                    // draw a paper, plus 6 for win:
+                    score += 2 + 6;
+                }
+                if draw.0 == 'p' {
+                    // draw a sisor, plus 6 for win:
+                    score += 3 + 6;
+                }
+                if draw.0 == 's' {
+                    // draw a rock, plus 6 for win:
+                    score += 1 + 6;
+                }
+            }
+        }
+        self.solution2 = score;
     }
 
     fn solution_problem1(&self) -> String {
