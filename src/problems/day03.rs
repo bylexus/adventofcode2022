@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::{collections::HashSet};
 
 use crate::problems::Problem;
 
@@ -33,52 +33,55 @@ impl Problem for Day03 {
     }
 
     fn solve_problem1(&mut self) {
-        let mut sums: Vec<u64> = Vec::new();
+        let mut sum: u64 = 0;
         for line in &self.input {
             let mut itemset: HashSet<u8> = HashSet::new();
-            let (s1, s2) = line.split_at(line.len() / 2);
-            for c in Vec::from(s1) {
-                itemset.insert(c);
+            let bytes = line.as_bytes();
+            for i in 0..(line.len() / 2) {
+                itemset.insert(bytes[i]);
             }
-            for c in Vec::from(s2) {
+            for i in (line.len() / 2)..line.len() {
+                let c = bytes[i];
                 if itemset.contains(&c) {
                     if c >= 97 {
                         // lower case:
-                        sums.push((c - 96).into());
+                        sum += u64::from(c - 96);
                     } else {
                         // upper case:
-                        sums.push((c - 38).into());
+                        sum += u64::from(c - 38);
                     }
                     break;
                 }
             }
         }
-        self.solution1 = sums.iter().sum();
+        self.solution1 = sum;
     }
 
     fn solve_problem2(&mut self) {
-        let mut sums: Vec<u64> = Vec::new();
+        let mut sum: u64 = 0;
         let mut idx = 0;
         let mut itemset1: HashSet<u8> = HashSet::new();
         let mut itemset2: HashSet<u8> = HashSet::new();
 
-        while idx < self.input.len()-2 {
+        // put line 1 + 2 items into a set each,
+        // then check the 3rd for entries in the two sets:
+        while idx < self.input.len() - 2 {
             itemset1.clear();
             itemset2.clear();
-            for c in Vec::from(self.input.get(idx).unwrap().as_str()) {
-                itemset1.insert(c);
+            for c in self.input.get(idx).unwrap().as_bytes() {
+                itemset1.insert(*c);
             }
-            for c in Vec::from(self.input.get(idx+1).unwrap().as_str()) {
-                itemset2.insert(c);
+            for c in self.input.get(idx + 1).unwrap().as_bytes() {
+                itemset2.insert(*c);
             }
-            for c in Vec::from(self.input.get(idx+2).unwrap().as_str()) {
+            for c in self.input.get(idx + 2).unwrap().as_bytes() {
                 if itemset1.contains(&c) && itemset2.contains(&c) {
-                    if c >= 97 {
+                    if *c >= 97u8 {
                         // lower case:
-                        sums.push((c - 96).into());
+                        sum += u64::from(c - 96);
                     } else {
                         // upper case:
-                        sums.push((c - 38).into());
+                        sum += u64::from(c - 38);
                     }
                     break;
                 }
@@ -86,7 +89,7 @@ impl Problem for Day03 {
             idx += 3;
         }
 
-        self.solution2 = sums.iter().sum();
+        self.solution2 = sum;
     }
 
     fn solution_problem1(&self) -> String {
