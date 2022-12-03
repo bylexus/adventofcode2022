@@ -34,8 +34,10 @@ impl Problem for Day03 {
 
     fn solve_problem1(&mut self) {
         let mut sum: u64 = 0;
+        let mut itemset: HashSet<u8> = HashSet::new();
+
         for line in &self.input {
-            let mut itemset: HashSet<u8> = HashSet::new();
+            itemset.clear();
             let bytes = line.as_bytes();
             for i in 0..(line.len() / 2) {
                 itemset.insert(bytes[i]);
