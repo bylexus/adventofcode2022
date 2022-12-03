@@ -4,7 +4,7 @@
 /// As always, I participate in Adventofcode (https://adventofcode.com/),
 /// this time I will use Rust - a new year, a new language :-)
 ///
-use adventofcode2022::problems::{Day01, Day02, Day2021_01, Problem, Day2021_02};
+use adventofcode2022::problems::{Day01, Day02, Day03, Day2021_01, Problem, Day2021_02};
 
 use std::{collections::HashMap, env, time::SystemTime};
 
@@ -21,6 +21,7 @@ fn create_problems() -> HashMap<String, Box<dyn Problem>> {
     // AoC 2022 problems
     problems.insert(String::from("01"), Box::new(Day01::new()));
     problems.insert(String::from("02"), Box::new(Day02::new()));
+    problems.insert(String::from("03"), Box::new(Day03::new()));
 
     return problems;
 }
