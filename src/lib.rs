@@ -3,6 +3,8 @@ use std::{
     io::{BufRead, BufReader},
 };
 
+use regex::{Captures, Regex};
+
 pub mod problems;
 
 pub fn read_lines(file: &str) -> Vec<String> {
@@ -18,6 +20,18 @@ pub fn split_lines(lines: &Vec<String>, separator: &str) -> Vec<Vec<String>> {
         .map(|s| s.split(separator).map(|el| String::from(el)).collect())
         .collect();
     lines
+}
+
+pub fn split_groups<'a>(lines: &'a Vec<String>, regex: &'a Regex) -> Vec<Captures<'a>> {
+    let mut res = Vec::new();
+    for line in lines {
+        res.push(match regex.captures(line) {
+            Some(c) => c,
+            None => continue,
+        });
+    }
+
+    return res;
 }
 
 pub fn lines_to_numbers(lines: &Vec<String>) -> Vec<i64> {

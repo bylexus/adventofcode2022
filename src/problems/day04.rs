@@ -2,8 +2,24 @@ use regex::Regex;
 
 use crate::problems::Problem;
 
+struct Section {
+    begin: u64,
+    end: u64,
+}
+
+impl Section {
+    fn contains(&self, other: &Section) -> bool {
+        (self.begin >= other.begin && self.end <= other.end)
+            || (other.begin >= self.begin && other.end <= self.end)
+    }
+    fn overlaps(&self, other: &Section) -> bool {
+        (self.begin <= other.end && self.end >= other.begin)
+            || (other.begin <= self.end && other.end >= self.begin)
+    }
+}
+
 pub struct Day04 {
-    input: Vec<((u64, u64), (u64, u64))>,
+    input: Vec<(Section, Section)>,
     solution1: usize,
     solution2: usize,
 }
@@ -23,20 +39,17 @@ impl Problem for Day04 {
         // let lines = crate::read_lines("input-data/04-test.txt");
         let lines = crate::read_lines("input-data/04-data.txt");
         let re = Regex::new(r"(\d+)-(\d+),(\d+)-(\d+)").unwrap();
-        lines.iter().for_each(|line| {
-            match re.captures(line) {
-                Some(groups) => self.input.push((
-                    (
-                        str::parse::<u64>(groups.get(1).unwrap().as_str()).unwrap(),
-                        str::parse::<u64>(groups.get(2).unwrap().as_str()).unwrap(),
-                    ),
-                    (
-                        str::parse::<u64>(groups.get(3).unwrap().as_str()).unwrap(),
-                        str::parse::<u64>(groups.get(4).unwrap().as_str()).unwrap(),
-                    ),
-                )),
-                None => return,
-            };
+        crate::split_groups(&lines, &re).iter().for_each(|groups| {
+            self.input.push((
+                Section {
+                    begin: str::parse::<u64>(groups.get(1).unwrap().as_str()).unwrap(),
+                    end: str::parse::<u64>(groups.get(2).unwrap().as_str()).unwrap(),
+                },
+                Section {
+                    begin: str::parse::<u64>(groups.get(3).unwrap().as_str()).unwrap(),
+                    end: str::parse::<u64>(groups.get(4).unwrap().as_str()).unwrap(),
+                },
+            ));
         });
         // let lines = crate::read_lines("input-data/04-data.txt");
 
@@ -54,20 +67,14 @@ impl Problem for Day04 {
         self.solution1 = self
             .input
             .iter()
-            .filter(|entry| {
-                (entry.0 .0 >= entry.1 .0 && entry.0 .1 <= entry.1 .1)
-                    || (entry.1 .0 >= entry.0 .0 && entry.1 .1 <= entry.0 .1)
-            })
+            .filter(|entry| entry.0.contains(&entry.1) || entry.1.contains(&entry.0))
             .count();
     }
     fn solve_problem2(&mut self) {
         self.solution2 = self
             .input
             .iter()
-            .filter(|entry| {
-                (entry.0 .0 <= entry.1 .1 && entry.0 .1 >= entry.1 .0)
-                    || (entry.1 .0 <= entry.0 .1 && entry.1 .1 >= entry.0 .0)
-            })
+            .filter(|entry| entry.0.overlaps(&entry.1) || entry.1.overlaps(&entry.0))
             .count();
     }
 
