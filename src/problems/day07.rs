@@ -29,7 +29,7 @@ impl DirInfo {
         return None;
     }
 
-    fn print(&self, indent: usize) {
+    fn _print(&self, indent: usize) {
         let mut spaces = String::new();
         for _ in 0..indent {
             spaces += " ";
@@ -38,10 +38,10 @@ impl DirInfo {
         // println!("{} - {}", spaces, self.name);
         for d in self.child_dirs.iter() {
             let dir = d.as_ref().borrow();
-            dir.print(indent + 2);
+            dir._print(indent + 2);
         }
         for f in self.child_files.iter() {
-            f.print(indent + 2);
+            f._print(indent + 2);
         }
     }
 
@@ -60,51 +60,37 @@ impl DirInfo {
 
 #[derive(Debug)]
 struct FileInfo {
-    name: String,
+    _name: String,
     size: u64,
 }
 
 impl FileInfo {
-    fn print(&self, indent: usize) {
+    fn _print(&self, indent: usize) {
         let mut spaces = String::new();
         for _ in 0..indent {
             spaces += " ";
         }
 
-        println!("{} - {}", spaces, self.name);
+        println!("{} - {}", spaces, self._name);
     }
 }
 
-pub struct Day07 {
+struct DataStore {
     root_dir: Option<Rc<RefCell<DirInfo>>>,
     dirs: Vec<Rc<RefCell<DirInfo>>>,
-    solution1: u64,
-    solution2: u64,
 }
 
-impl Day07 {
-    pub fn new() -> Day07 {
-        Day07 {
-            dirs: Vec::new(),
-            root_dir: None,
-            solution1: 0,
-            solution2: 0,
-        }
-    }
-}
-
-impl Problem for Day07 {
-    fn setup(&mut self) {
-        // let lines = crate::read_lines("input-data/07-test.txt");
-        let lines = crate::read_lines("input-data/07-data.txt");
-
+impl DataStore {
+    fn parse_input(&mut self, lines: &Vec<String>) {
         self.root_dir = Some(Rc::new(RefCell::new(DirInfo {
             name: String::from("/"),
             parent_dir: None,
             child_dirs: Vec::new(),
             child_files: Vec::new(),
         })));
-        self.dirs.push(Rc::clone(self.root_dir.as_ref().unwrap()));
+        self
+            .dirs
+            .push(Rc::clone(self.root_dir.as_ref().unwrap()));
         let mut act_dir = Rc::clone(self.root_dir.as_ref().unwrap());
         let file_match = Regex::new(r"^(\d+) (.*)").unwrap();
 
@@ -153,12 +139,40 @@ impl Problem for Day07 {
                 let size: u64 = str::parse(groups.get(1).unwrap().as_str()).unwrap();
                 let name = groups.get(2).unwrap().as_str();
                 let f = FileInfo {
-                    name: String::from(name),
+                    _name: String::from(name),
                     size: size,
                 };
                 act_dir.borrow_mut().child_files.push(f);
             }
         }
+
+    }
+}
+
+pub struct Day07 {
+    data: DataStore,
+    solution1: u64,
+    solution2: u64,
+}
+
+impl Day07 {
+    pub fn new() -> Day07 {
+        Day07 {
+            data: DataStore {
+                root_dir: None,
+                dirs: Vec::new(),
+            },
+            solution1: 0,
+            solution2: 0,
+        }
+    }
+}
+
+impl Problem for Day07 {
+    fn setup(&mut self) {
+        // let lines = crate::read_lines("input-data/07-test.txt");
+        let lines = crate::read_lines("input-data/07-data.txt");
+        self.data.parse_input(&lines);
 
         // self.root_dir.as_ref().unwrap().as_ref().borrow().print(0);
 
@@ -167,12 +181,12 @@ impl Problem for Day07 {
     }
 
     fn title(&self) -> String {
-        String::from("07 - xxx")
+        String::from("07 - No Space Left On Device")
     }
 
     fn solve_problem1(&mut self) {
         let mut sum = 0;
-        for d in self.dirs.iter() {
+        for d in self.data.dirs.iter() {
             let dir = d.as_ref().borrow();
             let size = dir.calc_size();
             if size <= 100000 {
@@ -185,6 +199,7 @@ impl Problem for Day07 {
     fn solve_problem2(&mut self) {
         let mut dirs: Vec<u64> = Vec::new();
         let total = self
+            .data
             .root_dir
             .as_ref()
             .unwrap()
@@ -193,7 +208,7 @@ impl Problem for Day07 {
             .calc_size();
         let to_delete = total - 40000000;
 
-        for d in self.dirs.iter() {
+        for d in self.data.dirs.iter() {
             let dir = d.as_ref().borrow();
             let size = dir.calc_size();
             if size >= to_delete {
