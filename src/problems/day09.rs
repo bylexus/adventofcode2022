@@ -98,12 +98,13 @@ impl Day09 {
                     rope[0].0 -= 1;
                 }
 
-                // ---- process tails -----
+                // ---- process tails, from head to toe :-) -----
                 for i in 1..rope.len() {
                     let head = rope[i - 1];
-                    let mut tail = rope[i];
+                    let tail = rope.get_mut(i).unwrap();
+
+                    // head is only 1 step away from tail: no tail move needed
                     if (head.0 - tail.0).abs() <= 1 && (head.1 - tail.1).abs() <= 1 {
-                        // head is only 1 step away from tail: no tail move needed
                         continue;
                     }
                     // follow diagonally: (move up to 1 place in one step in the dir of the head)
@@ -117,24 +118,12 @@ impl Day09 {
                         0 => 0,
                         _ => 1,
                     };
-                    rope[i] = tail;
                 }
 
                 let tail = rope.last().unwrap();
-                if !self.visited.contains_key(tail) {
-                    self.visited.insert(*tail, 0);
-                }
-                self.visited.entry(*tail).and_modify(|entry| {
-                    *entry += 1;
-                });
-
-                // println!("Tail move");
-                // self.print_visited(head, tail);
+                self.visited.insert(*tail, 1);
             }
         }
-        // let head = rope[0];
-        // let tail = rope.last().unwrap();
-        // self.print_visited(head, *tail);
         return self.visited.len() as u64;
     }
 }
