@@ -14,7 +14,7 @@ struct Instruction {
 pub struct Day09 {
     instructions: Vec<Instruction>,
     visited: HashMap<Point, u64>,
-    solution1: usize,
+    solution1: u64,
     solution2: u64,
 }
 
@@ -76,12 +76,74 @@ impl Day09 {
         }
         println!("");
     }
+
+    fn walk_instructions(&mut self, rope_length: usize) -> u64 {
+        self.visited = HashMap::new();
+        let mut rope: Vec<(i64, i64)> = Vec::new();
+
+        for _ in 0..rope_length {
+            rope.push((0, 0));
+        }
+
+        for instr in self.instructions.iter() {
+            for _ in 0..instr.steps {
+                // Move head first:
+                if instr.dir == 'U' {
+                    rope[0].1 -= 1;
+                } else if instr.dir == 'R' {
+                    rope[0].0 += 1;
+                } else if instr.dir == 'D' {
+                    rope[0].1 += 1;
+                } else if instr.dir == 'L' {
+                    rope[0].0 -= 1;
+                }
+
+                // ---- process tails -----
+                for i in 1..rope.len() {
+                    let head = rope[i - 1];
+                    let mut tail = rope[i];
+                    if (head.0 - tail.0).abs() <= 1 && (head.1 - tail.1).abs() <= 1 {
+                        // head is only 1 step away from tail: no tail move needed
+                        continue;
+                    }
+                    // follow diagonally: (move up to 1 place in one step in the dir of the head)
+                    tail.0 += match head.0 - tail.0 {
+                        1.. => 1,
+                        0 => 0,
+                        _ => -1,
+                    };
+                    tail.1 -= match head.1 - tail.1 {
+                        1.. => -1,
+                        0 => 0,
+                        _ => 1,
+                    };
+                    rope[i] = tail;
+                }
+
+                let tail = rope.last().unwrap();
+                if !self.visited.contains_key(tail) {
+                    self.visited.insert(*tail, 0);
+                }
+                self.visited.entry(*tail).and_modify(|entry| {
+                    *entry += 1;
+                });
+
+                // println!("Tail move");
+                // self.print_visited(head, tail);
+            }
+        }
+        // let head = rope[0];
+        // let tail = rope.last().unwrap();
+        // self.print_visited(head, *tail);
+        return self.visited.len() as u64;
+    }
 }
 
 impl Problem for Day09 {
     fn setup(&mut self) {
-        let lines = crate::read_lines("input-data/09-test.txt");
-        // let lines = crate::read_lines("input-data/09-data.txt");
+        // let lines = crate::read_lines("input-data/09-test.txt");
+        // let lines = crate::read_lines("input-data/09-test2.txt");
+        let lines = crate::read_lines("input-data/09-data.txt");
 
         crate::split_lines(&lines, " ").iter().for_each(|parts| {
             if parts.len() == 2 {
@@ -92,96 +154,21 @@ impl Problem for Day09 {
                 self.instructions.push(instr);
             }
         });
-        println!("{:?}", self.instructions);
+        // println!("{:?}", self.instructions);
         self.solution1 = 0;
         self.solution2 = 0;
     }
 
     fn title(&self) -> String {
-        String::from("09 - xxx")
+        String::from("09 - Rope Bridge")
     }
 
     fn solve_problem1(&mut self) {
-        let mut head = (0, 0);
-        let mut tail = (0, 0);
-
-        // rope: head is at the FRONT (index 0),
-        //       tail is at the BACK (index len()-1)
-        let mut rope = Vec::new();
-
-        for i in 0..2 {
-            rope.push((0, 0));
-        }
-
-        self.visited.insert(head, 1);
-        println!("");
-
-        for instr in self.instructions.iter() {
-            println!("Instr: {:?}", instr);
-            for nr in 0..instr.steps {
-                // Move head first:
-                if instr.dir == 'U' {
-                    head.1 -= 1;
-                }
-                if instr.dir == 'R' {
-                    head.0 += 1;
-                }
-                if instr.dir == 'D' {
-                    head.1 += 1;
-                }
-                if instr.dir == 'L' {
-                    head.0 -= 1;
-                }
-                // println!("Head move");
-                // self.print_visited(head, tail);
-
-                // ---- process tail -----
-                if (head.0 - tail.0).abs() <= 1 && (head.1 - tail.1).abs() <= 1 {
-                    // head is only 1 step away from tail: no tail move needed
-                    continue;
-                }
-                // head is above tail
-                if (head.1 - tail.1) == -2 {
-                    // follow diagonally:
-                    tail.1 -= 1;
-                    tail.0 += head.0 - tail.0;
-                }
-                // head is below tail
-                else if (head.1 - tail.1) == 2 {
-                    // follow diagonally:
-                    tail.1 += 1;
-                    tail.0 += head.0 - tail.0;
-                }
-
-                // head is right of tail
-                if (head.0 - tail.0) == 2 {
-                    // follow diagonally:
-                    tail.0 += 1;
-                    tail.1 += head.1 - tail.1;
-                }
-                // head is left of tail
-                else if (head.0 - tail.0) == -2 {
-                    // follow diagonally:
-                    tail.0 -= 1;
-                    tail.1 += head.1 - tail.1;
-                }
-
-                if !self.visited.contains_key(&tail) {
-                    self.visited.insert(tail, 0);
-                }
-                self.visited.entry(tail).and_modify(|entry| {
-                    *entry += 1;
-                });
-
-                // println!("Tail move");
-                // self.print_visited(head, tail);
-            }
-        }
-        self.print_visited(head, tail);
-        self.solution1 = self.visited.len();
+        self.solution1 = self.walk_instructions(2);
     }
+
     fn solve_problem2(&mut self) {
-        self.solution2 = 0;
+        self.solution2 = self.walk_instructions(10);
     }
 
     fn solution_problem1(&self) -> String {
