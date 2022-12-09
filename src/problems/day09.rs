@@ -14,6 +14,7 @@ struct Instruction {
 pub struct Day09 {
     instructions: Vec<Instruction>,
     visited: HashMap<Point, u64>,
+    dir_map: HashMap<char, Point>,
     solution1: u64,
     solution2: u64,
 }
@@ -23,6 +24,7 @@ impl Day09 {
         Day09 {
             instructions: Vec::new(),
             visited: HashMap::new(),
+            dir_map: HashMap::new(),
             solution1: 0,
             solution2: 0,
         }
@@ -87,16 +89,10 @@ impl Day09 {
 
         for instr in self.instructions.iter() {
             for _ in 0..instr.steps {
-                // Move head first:
-                if instr.dir == 'U' {
-                    rope[0].1 -= 1;
-                } else if instr.dir == 'R' {
-                    rope[0].0 += 1;
-                } else if instr.dir == 'D' {
-                    rope[0].1 += 1;
-                } else if instr.dir == 'L' {
-                    rope[0].0 -= 1;
-                }
+                // Move head first, according to direction map pointer:
+                let move_ptr = self.dir_map.get(&instr.dir).unwrap();
+                rope[0].0 += move_ptr.0;
+                rope[0].1 += move_ptr.1;
 
                 // ---- process tails, from head to toe :-) -----
                 for i in 1..rope.len() {
@@ -143,6 +139,11 @@ impl Problem for Day09 {
                 self.instructions.push(instr);
             }
         });
+
+        self.dir_map.insert('U', (0, -1));
+        self.dir_map.insert('R', (1, 0));
+        self.dir_map.insert('D', (0, 1));
+        self.dir_map.insert('L', (-1, 0));
         // println!("{:?}", self.instructions);
         self.solution1 = 0;
         self.solution2 = 0;
