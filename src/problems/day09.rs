@@ -1,9 +1,12 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use crate::problems::Problem;
 
-/// x, y, means: Point.0 => x, Point.1 => y
-type Point = (i64, i64);
+#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
+struct Point {
+    x: i64,
+    y: i64,
+}
 
 #[derive(Debug)]
 struct Instruction {
@@ -13,7 +16,7 @@ struct Instruction {
 
 pub struct Day09 {
     instructions: Vec<Instruction>,
-    visited: HashMap<Point, u64>,
+    visited: HashSet<Point>,
     dir_map: HashMap<char, Point>,
     solution1: u64,
     solution2: u64,
@@ -23,43 +26,40 @@ impl Day09 {
     pub fn new() -> Day09 {
         Day09 {
             instructions: Vec::new(),
-            visited: HashMap::new(),
+            visited: HashSet::new(),
             dir_map: HashMap::new(),
             solution1: 0,
             solution2: 0,
         }
     }
 
-    fn print_visited(&self, head: (i64, i64), tail: (i64, i64)) {
-        let mut top_left = (0, 0);
-        let mut bottom_right = (0, 0);
+    fn _print_visited(&self, head: (i64, i64), tail: (i64, i64)) {
+        let mut top_left = Point { x: 0, y: 0 };
+        let mut bottom_right = Point { x: 0, y: 0 };
 
-        for key in self.visited.keys() {
-            if key.0 < top_left.0 {
-                top_left.0 = key.0;
+        for point in self.visited.iter() {
+            if point.x < top_left.x {
+                top_left.x = point.x;
             }
-            if key.1 < top_left.1 {
-                top_left.1 = key.1;
+            if point.y < top_left.y {
+                top_left.y = point.y;
             }
-            if key.0 > bottom_right.0 {
-                bottom_right.0 = key.0;
+            if point.x > bottom_right.x {
+                bottom_right.x = point.x;
             }
-            if key.1 > bottom_right.1 {
-                bottom_right.1 = key.1;
+            if point.y > bottom_right.y {
+                bottom_right.y = point.y;
             }
         }
-        top_left.0 -= 2;
-        top_left.1 -= 2;
-        bottom_right.0 += 2;
-        bottom_right.1 += 2;
+        top_left.x -= 2;
+        top_left.y -= 2;
+        bottom_right.x += 2;
+        bottom_right.y += 2;
 
         println!("head: {:?}, tail: {:?}", head, tail);
-        for y in top_left.1..=bottom_right.1 {
-            for x in top_left.0..=bottom_right.0 {
-                let value = match self.visited.get(&(x, y)) {
-                    Some(n) => *n,
-                    None => 0,
-                };
+        for y in top_left.y..=bottom_right.y {
+            for x in top_left.x..=bottom_right.x {
+                let value = self.visited.get(&Point { x, y });
                 if (x, y) == head {
                     print!("{}", 'H');
                 } else if (x, y) == tail {
@@ -68,8 +68,8 @@ impl Day09 {
                     print!(
                         "{}",
                         match value {
-                            0 => ".",
-                            1.. => "#",
+                            None => ".",
+                            Some(_) => "#",
                         }
                     );
                 }
@@ -80,19 +80,15 @@ impl Day09 {
     }
 
     fn walk_instructions(&mut self, rope_length: usize) -> u64 {
-        self.visited = HashMap::new();
-        let mut rope: Vec<(i64, i64)> = Vec::new();
+        self.visited = HashSet::new();
+        let mut rope: Vec<Point> = vec![Point { x: 0, y: 0 }; rope_length];
 
-        for _ in 0..rope_length {
-            rope.push((0, 0));
-        }
-
-        for instr in self.instructions.iter() {
+        self.instructions.iter().for_each(|instr| {
             for _ in 0..instr.steps {
                 // Move head first, according to direction map pointer:
                 let move_ptr = self.dir_map.get(&instr.dir).unwrap();
-                rope[0].0 += move_ptr.0;
-                rope[0].1 += move_ptr.1;
+                rope[0].x += move_ptr.x;
+                rope[0].y += move_ptr.y;
 
                 // ---- process tails, from head to toe :-) -----
                 for i in 1..rope.len() {
@@ -100,16 +96,16 @@ impl Day09 {
                     let tail = rope.get_mut(i).unwrap();
 
                     // head is only 1 step away from tail: no tail move needed
-                    if (head.0 - tail.0).abs() <= 1 && (head.1 - tail.1).abs() <= 1 {
+                    if (head.x - tail.x).abs() <= 1 && (head.y - tail.y).abs() <= 1 {
                         continue;
                     }
                     // follow diagonally: (move up to 1 place in one step in the dir of the head)
-                    tail.0 += match head.0 - tail.0 {
+                    tail.x += match head.x - tail.x {
                         1.. => 1,
                         0 => 0,
                         _ => -1,
                     };
-                    tail.1 -= match head.1 - tail.1 {
+                    tail.y -= match head.y - tail.y {
                         1.. => -1,
                         0 => 0,
                         _ => 1,
@@ -117,9 +113,9 @@ impl Day09 {
                 }
 
                 let tail = rope.last().unwrap();
-                self.visited.insert(*tail, 1);
+                self.visited.insert(*tail);
             }
-        }
+        });
         return self.visited.len() as u64;
     }
 }
@@ -140,10 +136,10 @@ impl Problem for Day09 {
             }
         });
 
-        self.dir_map.insert('U', (0, -1));
-        self.dir_map.insert('R', (1, 0));
-        self.dir_map.insert('D', (0, 1));
-        self.dir_map.insert('L', (-1, 0));
+        self.dir_map.insert('U', Point { x: 0, y: -1 });
+        self.dir_map.insert('R', Point { x: 1, y: 0 });
+        self.dir_map.insert('D', Point { x: 0, y: 1 });
+        self.dir_map.insert('L', Point { x: -1, y: 0 });
         // println!("{:?}", self.instructions);
         self.solution1 = 0;
         self.solution2 = 0;
