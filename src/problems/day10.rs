@@ -1,3 +1,8 @@
+use std::{
+    io::{stdout, Write},
+    time::Duration,
+};
+
 use crate::problems::Problem;
 
 #[derive(Debug)]
@@ -28,7 +33,6 @@ enum Instruction {
 
 pub struct Day10 {
     cpu: Cpu,
-    crt: Vec<Vec<u8>>,
     solution1: i64,
     solution2: String,
 }
@@ -41,10 +45,37 @@ impl Day10 {
                 mem: Vec::new(),
                 reg_x: 1,
             },
-            crt: Vec::new(),
             solution1: 0,
             solution2: String::new(),
         }
+    }
+
+    fn _solve_problem2_animated(&mut self) {
+        self.cpu.iptr = 0;
+        self.cpu.reg_x = 1;
+
+        println!("\n");
+        println!("\n");
+        while self.cpu.iptr < self.cpu.mem.len() as i64 {
+            let x = self.cpu.iptr % 40;
+            std::thread::sleep(Duration::from_millis(30));
+            if x == 0 {
+                println!("");
+            }
+            if self.cpu.reg_x >= x - 1 && self.cpu.reg_x <= x + 1 {
+                if rand::random() {
+                    print!("\x1b[38;5;40m█");
+                } else {
+                    print!("\x1b[38;5;42m█");
+                }
+            } else {
+                print!("\x1b[38;5;29m·");
+            }
+            stdout().flush().unwrap();
+            self.cpu.advance();
+        }
+        println!("\n");
+        println!("\x1B[0m\n");
     }
 }
 
@@ -65,11 +96,6 @@ impl Problem for Day10 {
                 }
             }
         });
-
-        // init crt:
-        for _ in 0..6 {
-            self.crt.push(vec![0; 40]);
-        }
     }
 
     fn title(&self) -> String {
@@ -91,30 +117,32 @@ impl Problem for Day10 {
 
         self.solution1 = sum;
     }
+
     fn solve_problem2(&mut self) {
+        // ******* Uncomment to get an animated version of the solution: *****************3
+        // return self._solve_problem2_animated();
+
+
         self.cpu.iptr = 0;
         self.cpu.reg_x = 1;
 
         let mut output = String::from("\n");
         while self.cpu.iptr < self.cpu.mem.len() as i64 {
-            let y = self.cpu.iptr / 40;
             let x = self.cpu.iptr % 40;
-            if self.cpu.reg_x >= x - 1 && self.cpu.reg_x <= x + 1 {
-                self.crt[y as usize][x as usize] = 1;
-            }
             if x == 0 {
                 output += "\n";
             }
-            output += match self.crt[y as usize][x as usize] {
-                0 => " ",
-                1 => "#",
-                _ => "",
-            };
+            if self.cpu.reg_x >= x - 1 && self.cpu.reg_x <= x + 1 {
+                output += "█";
+            } else {
+                output += " ";
+            }
             self.cpu.advance();
         }
 
         self.solution2 = output;
     }
+
 
     fn solution_problem1(&self) -> String {
         String::from(format!("{}", self.solution1))
