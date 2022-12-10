@@ -5,6 +5,9 @@ use std::{
 
 use crate::problems::Problem;
 
+const CRT_WIDTH: u32 = 40;
+const _CRT_HEIGHT: u32 = 6;
+
 #[derive(Debug)]
 struct Cpu {
     mem: Vec<Instruction>,
@@ -57,7 +60,7 @@ impl Day10 {
         println!("\n");
         println!("\n");
         while self.cpu.iptr < self.cpu.mem.len() as i64 {
-            let x = self.cpu.iptr % 40;
+            let x = self.cpu.iptr % (CRT_WIDTH as i64);
             std::thread::sleep(Duration::from_millis(30));
             if x == 0 {
                 println!("");
@@ -76,6 +79,25 @@ impl Day10 {
         }
         println!("\n");
         println!("\x1B[0m\n");
+    }
+
+    fn _solve_problem2_ocr(&mut self) {
+        self.cpu.iptr = 0;
+        self.cpu.reg_x = 1;
+
+        let mut img: image::RgbImage = image::ImageBuffer::new(CRT_WIDTH, _CRT_HEIGHT);
+
+        while self.cpu.iptr < self.cpu.mem.len() as i64 {
+            let x = self.cpu.iptr % (CRT_WIDTH as i64);
+            let y = self.cpu.iptr / (CRT_WIDTH as i64);
+            if self.cpu.reg_x >= x - 1 && self.cpu.reg_x <= x + 1 {
+                img.put_pixel(x as u32, y as u32, image::Rgb { 0: [0, 0, 0] });
+            } else {
+                img.put_pixel(x as u32, y as u32, image::Rgb { 0: [255, 255, 255] });
+            }
+            self.cpu.advance();
+        }
+        img.save("day10-img.png").unwrap();
     }
 }
 
@@ -122,13 +144,15 @@ impl Problem for Day10 {
         // ******* Uncomment to get an animated version of the solution: *****************3
         // return self._solve_problem2_animated();
 
+        // ******* Uncomment to get an OCR version of the solution: *****************3
+        // return self._solve_problem2_ocr();
 
         self.cpu.iptr = 0;
         self.cpu.reg_x = 1;
 
         let mut output = String::from("\n");
         while self.cpu.iptr < self.cpu.mem.len() as i64 {
-            let x = self.cpu.iptr % 40;
+            let x = self.cpu.iptr % (CRT_WIDTH as i64);
             if x == 0 {
                 output += "\n";
             }
@@ -142,7 +166,6 @@ impl Problem for Day10 {
 
         self.solution2 = output;
     }
-
 
     fn solution_problem1(&self) -> String {
         String::from(format!("{}", self.solution1))
