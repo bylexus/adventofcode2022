@@ -4,7 +4,10 @@
 /// As always, I participate in Adventofcode (https://adventofcode.com/),
 /// this time I will use Rust - a new year, a new language :-)
 ///
-use adventofcode2022::problems::{Day01, Day02, Day03, Day04, Day05, Day06, Day07, Day08, Day09, Day2021_01, Problem, Day2021_02};
+use adventofcode2022::problems::{
+    Day01, Day02, Day03, Day04, Day05, Day06, Day07, Day08, Day09, Day10, Day2021_01, Day2021_02,
+    Problem,
+};
 
 use std::{collections::HashMap, env, time::SystemTime};
 
@@ -28,6 +31,7 @@ fn create_problems() -> HashMap<String, Box<dyn Problem>> {
     problems.insert(String::from("07"), Box::new(Day07::new()));
     problems.insert(String::from("08"), Box::new(Day08::new()));
     problems.insert(String::from("09"), Box::new(Day09::new()));
+    problems.insert(String::from("10"), Box::new(Day10::new()));
 
     return problems;
 }
@@ -78,8 +82,14 @@ fn main() {
         let duration = SystemTime::now().duration_since(start).unwrap();
         println!("{:?}", duration);
 
-        println!("    \x1B[1;97mSolution\x1B[0m to Problem 1: \x1B[1;97m{}\x1B[0m", p.solution_problem1());
-        println!("    \x1B[1;97mSolution\x1B[0m to Problem 2: \x1B[1;97m{}\x1B[0m", p.solution_problem2());
+        println!(
+            "    \x1B[1;97mSolution\x1B[0m to Problem 1: \x1B[1;97m{}\x1B[0m",
+            p.solution_problem1()
+        );
+        println!(
+            "    \x1B[1;97mSolution\x1B[0m to Problem 2: \x1B[1;97m{}\x1B[0m",
+            p.solution_problem2()
+        );
     }
 
     let global_duration = SystemTime::now().duration_since(global_start).unwrap();
