@@ -43,7 +43,7 @@ impl Day11 {
         }
     }
 
-    fn print_monkeys(&self, monkeys: &Vec<Monkey>, round: usize) {
+    fn _print_monkeys(&self, monkeys: &Vec<Monkey>, round: usize) {
         println!("\n\nAfter Round {}", round);
         for (i, monkey) in monkeys.iter().enumerate() {
             print!("Monkey {}: ", i);
@@ -73,7 +73,6 @@ impl Problem for Day11 {
             line += 1;
 
             // starting items:
-            println!("Working on line: {}", &lines[line]);
             let mut items1: VecDeque<u64> = VecDeque::new();
             let mut items2: VecDeque<u64> = VecDeque::new();
             let si_group = starting_items_re.captures(&lines[line]).unwrap();
@@ -87,7 +86,6 @@ impl Problem for Day11 {
             line += 1;
 
             // op:
-            println!("Working on line: {}", &lines[line]);
             let op_group = op_re.captures(&lines[line]).unwrap();
             let op_str = op_group[2].trim();
             let op_value = match op_str {
@@ -103,19 +101,16 @@ impl Problem for Day11 {
             line += 1;
 
             // test:
-            println!("Working on line: {}", &lines[line]);
             let test_group = test_re.captures(&lines[line]).unwrap();
             let div_by: u64 = str::parse(&test_group[1]).unwrap();
             line += 1;
 
             // if true:
-            println!("Working on line: {}", &lines[line]);
             let true_group = true_re.captures(&lines[line]).unwrap();
             let true_monkey: usize = str::parse(&true_group[1]).unwrap();
             line += 1;
 
             // if false:
-            println!("Working on line: {}", &lines[line]);
             let false_group = false_re.captures(&lines[line]).unwrap();
             let false_monkey: usize = str::parse(&false_group[1]).unwrap();
             line += 1;
@@ -139,7 +134,6 @@ impl Problem for Day11 {
                 on_true: true_monkey,
                 on_false: false_monkey,
             });
-            println!("");
         }
 
         // println!("{:?}", self.monkeys);
@@ -153,7 +147,7 @@ impl Problem for Day11 {
     }
 
     fn solve_problem1(&mut self) {
-        for round in 0..20 {
+        for _ in 0..20 {
             for i in 0..self.monkeys1.len() {
                 while self.monkeys1[i].items.len() > 0 {
                     self.monkeys1[i].inspect_times += 1;
@@ -193,13 +187,20 @@ impl Problem for Day11 {
     }
 
     fn solve_problem2(&mut self) {
-        return;
-        for round in 0..10000 {
+        // Main Idea: because the worry values get too large soon, we need to reduce them, but
+        // in a way that does not harm the divisor checks: If we take the common divisor to reduce them (modulus),
+        // we can avoid that:
+        // The common divisor: We take the modulo of the common multiply of all divisors:
+        // this way we can reduce the value in each round so that the single modulos still work,
+        // but the number does not get too large:
+        let divisor = self.monkeys2.iter().map(|m| m.div_test).reduce(|prod, item | prod*item).unwrap();
+
+        for _ in 0..10000 {
             for i in 0..self.monkeys2.len() {
                 while self.monkeys2[i].items.len() > 0 {
                     self.monkeys2[i].inspect_times += 1;
                     let old_item = self.monkeys2[i].items.pop_front().unwrap();
-                    let new_item = match &self.monkeys2[i].op {
+                    let mut new_item = match &self.monkeys2[i].op {
                         Operator::Add(op_value) => {
                             old_item
                                 + match op_value {
@@ -215,13 +216,12 @@ impl Problem for Day11 {
                                 }
                         }
                     };
+                    new_item %= divisor;
                     if new_item % self.monkeys2[i].div_test == 0 {
                         let other_idx = self.monkeys2[i].on_true;
-                        let div = self.monkeys2[i].div_test;
                         self.monkeys2[other_idx].items.push_back(new_item);
                     } else {
                         let other_idx = self.monkeys2[i].on_false;
-                        let div = self.monkeys2[i].div_test;
                         self.monkeys2[other_idx].items.push_back(new_item);
                     }
                 }
