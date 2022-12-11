@@ -5,7 +5,7 @@
 /// this time I will use Rust - a new year, a new language :-)
 ///
 use adventofcode2022::problems::{
-    Day01, Day02, Day03, Day04, Day05, Day06, Day07, Day08, Day09, Day10, Day2021_01, Day2021_02,
+    Day01, Day02, Day03, Day04, Day05, Day06, Day07, Day08, Day09, Day10, Day11, Day2021_01, Day2021_02,
     Problem,
 };
 
@@ -32,6 +32,7 @@ fn create_problems() -> HashMap<String, Box<dyn Problem>> {
     problems.insert(String::from("08"), Box::new(Day08::new()));
     problems.insert(String::from("09"), Box::new(Day09::new()));
     problems.insert(String::from("10"), Box::new(Day10::new()));
+    problems.insert(String::from("11"), Box::new(Day11::new()));
 
     return problems;
 }
