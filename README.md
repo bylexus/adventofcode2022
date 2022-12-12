@@ -3,97 +3,27 @@
 Eagerly, we're all awaiting [Advent of Code, Edition 2022!](https://adventofcode.com/2022/). Finally, it's here.
 What a magical time of the year!
 
-This year I choose [Rust](https://rust-lang.org) as my weapon of choice, because:
+I started with [Rust](https://rust-lang.org) this year, until Day 12: On that day, I pulled the plug:
+I have to admit it, Rust is too annoying a programming language for my taste:
 
-* it is new for me
-* It is said to be blazzzing fast<sup>TM</sup>
-* It is hyped
-* I want to do something useful (hrmmm...) with the language
+All in all Rust has some very cool and intriguing features like Enums with additional values, a very good
+type system, no garbage collector, match expressions, no exceptions.
+But all in all, the safety net for this kind of memory management - ownership and borrow checker - makes it really really
+hard to do certain kind of tasks:
 
-For such a challenge, choosing a language that is irritatingly limiting your freedom (I look at you, Type System, Single-Object-Ownership, and the likes), makes it even more fun! Using a non-limiting language is for wimps,
-Rust for real bearded people only! Let's see how this turns out.
+For example cyclic references (Parent has a list of childs, and child has a reference to the parent) are almost impossible to do.
+But even small things are very hard to implement, e.g. accessing an array index while in a iterate loop over the same array.
 
-So this repository just contains my naïve solutions / tries for this year's code challenge.
-Expect nothing fancy, expect ugly code, expect one-time-hacks, expect solutions that do NOT follow "The Rust Way". It's the way, my way! Don't blame me, you're warned now.
+So I lost most of the time not solving the actual puzzle, but to understand why certain code will not compile.
 
-Alex
+All those compile-time checks like object ownership, borrow checker, lifetimes etc are good things - but too limitating for
+my taste.
 
-## Run problems
+So I switched to [GO](https://go.dev/), which is a very simple, small language, and much much easier to grasp.
 
-All problems can be run by its day index, e.g:
+Maybe I am just too stupid for Rust, who knows.
 
-```
-$ cargo run 01
-```
+Anyway, you can find the first 11 solutions in Rust, while the rest is sovled in Go:
 
-or all together:
-
-```
-$ cargo run
-```
-
-## Define Problems
-
-1) Create a struct that implements the `Problem` trait:
-
-```rs
-// src/problems/day01.rs:
-use crate::problems::Problem;
-
-pub struct Day01 {
-    // .....
-}
-
-impl Day01 {
-    pub fn new() -> Day01 {
-        Day01 {
-			// ...
-        }
-    }
-}
-
-impl Problem for Day01 {
-    fn setup(&mut self) {
-        // setup - read data, parse input etc.
-    }
-
-    fn title(&self) -> String {
-        String::from("01 - Calorie Counting")
-    }
-
-    fn solve_problem1(&mut self) {
-		// solve problem 1, store result e.g. in struct
-    }
-    fn solve_problem2(&mut self) {
-		// solve problem 2, store result e.g. in struct
-    }
-
-    fn solution_problem1(&self) -> String {
-		// Return a string that represents solution 1, e.g.:
-        String::from(format!("{}", self.solution1))
-    }
-
-    fn solution_problem2(&self) -> String {
-		// Return a string that represents solution 2, e.g.:
-        String::from(format!("{}", self.solution2))
-    }
-}
-```
-
-2) expose the type in the `problems` module:
-
-```rs
-// src/problems.rs:
-mod day01;
-pub use day01::Day01;
-```
-
-3) include and instantiate it in `main.rs`:
-
-```rs
-// main.rs:
-use adventofcode2022::problems::{Day01};
-
-//..
-problems.insert(String::from("01"), Box::new(Day01::new()));
-```
+* Rust solutions: [./rust/](./rust/)
+* GO solutions: [./go/](./go/)
