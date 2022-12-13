@@ -20,6 +20,8 @@ func main() {
 	problem_map["11"] = &day11
 	var day12 = problems.NewDay12()
 	problem_map["12"] = &day12
+	var day13 = problems.NewDay13()
+	problem_map["13"] = &day13
 
 	var to_solve = make([]string, 0)
 	for _, arg := range os.Args[1:] {
@@ -37,7 +39,12 @@ func main() {
 
 	var start = time.Now()
 	for _, p := range to_solve {
-		problems.Solve(problem_map[p])
+		var prob = problem_map[p]
+		if prob != nil {
+			problems.Solve(prob)
+		} else {
+			panic("Problem not found")
+		}
 	}
 	var duration = time.Now().Sub(start)
 	fmt.Printf("\n\nFull runtime: %s\n\n", duration)
