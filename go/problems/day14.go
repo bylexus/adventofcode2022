@@ -150,19 +150,19 @@ func (d *Day14) drizzle(start PointDay14) bool {
 		}
 		// can it be placed directly below?
 		target = PointDay14{x: start.x, y: start.y + 1}
-		if d.cave[target] == nil {
+		if d.getCaveMaterial(target) == ' ' {
 			start = target
 			continue
 		}
 		// can it be placed to the left?
 		target = PointDay14{x: start.x - 1, y: start.y + 1}
-		if d.cave[target] == nil {
+		if d.getCaveMaterial(target) == ' ' {
 			start = target
 			continue
 		}
 		// can it be placed to the right?
 		target = PointDay14{x: start.x + 1, y: start.y + 1}
-		if d.cave[target] == nil {
+		if d.getCaveMaterial(target) == ' ' {
 			start = target
 			continue
 		}
@@ -183,19 +183,19 @@ func (d *Day14) drizzle2(start PointDay14) bool {
 	for {
 		// can it be placed directly below?
 		target = PointDay14{x: start.x, y: start.y + 1}
-		if d.getCaveMaterial(target) == nil {
+		if d.getCaveMaterial(target) == ' ' {
 			start = target
 			continue
 		}
 		// can it be placed to the left?
 		target = PointDay14{x: start.x - 1, y: start.y + 1}
-		if d.getCaveMaterial(target) == nil {
+		if d.getCaveMaterial(target) == ' ' {
 			start = target
 			continue
 		}
 		// can it be placed to the right?
 		target = PointDay14{x: start.x + 1, y: start.y + 1}
-		if d.getCaveMaterial(target) == nil {
+		if d.getCaveMaterial(target) == ' ' {
 			start = target
 			continue
 		}
@@ -213,8 +213,8 @@ func (d *Day14) drizzle2(start PointDay14) bool {
 
 func (d *Day14) printCave() {
 	fmt.Println()
-	for y := d.caveMinY; y <= d.caveMaxY+3; y++ {
-		for x := d.caveMinX - 20; x <= d.caveMaxX+20; x++ {
+	for y := d.caveMinY; y <= d.caveMaxY; y++ {
+		for x := d.caveMinX; x <= d.caveMaxX; x++ {
 			var place = d.cave[PointDay14{x: int64(x), y: int64(y)}]
 			if place != nil {
 				fmt.Printf("%c", place.material)
@@ -235,13 +235,14 @@ func (d *Day14) resetCave() {
 	}
 }
 
-func (d *Day14) getCaveMaterial(coord PointDay14) *PlaceDay14 {
+func (d *Day14) getCaveMaterial(coord PointDay14) rune {
 	// endless horizontal bottom rocks:
 	if coord.y == d.caveMaxY+2 {
-		return &PlaceDay14{
-			material: '#',
-			coord:    &coord,
-		}
+		return '#'
 	}
-	return d.cave[coord]
+	place := d.cave[coord]
+	if place == nil {
+		return ' '
+	}
+	return place.material
 }
