@@ -28,14 +28,13 @@ func (d Entry) String() string {
 }
 
 type Day13 struct {
-	s1    uint
-	s2    uint
-	left  []Entry
-	right []Entry
+	s1      uint
+	s2      uint
+	entries []Entry
 }
 
 func NewDay13() Day13 {
-	return Day13{s1: 0, s2: 0}
+	return Day13{s1: 0, s2: 0, entries: make([]Entry, 0)}
 }
 
 func (d *Day13) Title() string {
@@ -45,12 +44,11 @@ func (d *Day13) Title() string {
 func (d *Day13) Setup() {
 	// var lines = lib.ReadLines("data/13-test.txt")
 	var lines = lib.ReadLines("data/13-data.txt")
-	for i := 0; i < len(lines); i++ {
+	for i := 0; i < len(lines); i += 3 {
 		var left = d.parse(lines[i])[0]
 		var right = d.parse(lines[i+1])[0]
-		d.left = append(d.left, left)
-		d.right = append(d.right, right)
-		i += 2
+		d.entries = append(d.entries, left)
+		d.entries = append(d.entries, right)
 		// fmt.Printf("%v\n", left)
 		// fmt.Printf("%v\n", right)
 	}
@@ -119,11 +117,11 @@ func (d *Day13) compare(left *Entry, right *Entry) int {
 
 func (d *Day13) SolveProblem1() {
 	var sum uint = 0
-	for i := 0; i < len(d.left); i++ {
-		var left = &d.left[i]
-		var right = &d.right[i]
+	for i := 0; i < len(d.entries); i += 2 {
+		var left = &d.entries[i]
+		var right = &d.entries[i+1]
 		if d.compare(left, right) == 1 {
-			sum += uint(i + 1)
+			sum += uint(i/2 + 1)
 		}
 	}
 	d.s1 = sum
@@ -135,11 +133,7 @@ func (d *Day13) SolveProblem2() {
 	m1.is_marker = true
 	m2.is_marker = true
 
-	var all = make([]Entry, 0)
-	all = append(all, d.left...)
-	all = append(all, d.right...)
-
-	all = append(all)
+	var all = d.entries
 	all = append(all, m1)
 	all = append(all, m2)
 
@@ -226,6 +220,8 @@ func (d *Day13) parse(line string) []Entry {
 			}
 		}
 	}
+
+	// take last number, if we were in the process of parsing one:
 	if mode == 2 {
 		nr, err := strconv.ParseUint(nr_str, 10, 32)
 		lib.Check(err)
@@ -234,7 +230,6 @@ func (d *Day13) parse(line string) []Entry {
 			value:   uint(nr),
 		}
 		result = append(result, entry)
-
 	}
 
 	return result
