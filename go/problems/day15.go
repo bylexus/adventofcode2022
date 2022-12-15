@@ -23,13 +23,14 @@ type PlaceDay15 struct {
 type MapDay15 map[PointDay15]*PlaceDay15
 
 type Day15 struct {
-	s1      uint64
-	s2      uint64
-	tl      PointDay15
-	br      PointDay15
-	maxDist int64
-	testy1  int64
-	cave    MapDay15
+	s1        uint64
+	s2        uint64
+	tl        PointDay15
+	br        PointDay15
+	maxDist   int64
+	testy1    int64
+	maxCoord2 int64
+	cave      MapDay15
 }
 
 func NewDay15() Day15 {
@@ -43,9 +44,11 @@ func (d *Day15) Title() string {
 func (d *Day15) Setup() {
 	// var lines = lib.ReadLines("data/15-test.txt")
 	// d.testy1 = 10
+	// d.maxCoord2 = 20
 
 	var lines = lib.ReadLines("data/15-data.txt")
 	d.testy1 = 2000000
+	d.maxCoord2 = 4000000
 
 	// matcher for "Sensor at x=20, y=1: closest beacon is at x=15, y=3"
 	var matcher = regexp.MustCompile(`Sensor at x=(-?\d+), y=(-?\d+): closest beacon is at x=(-?\d+), y=(-?\d+)`)
@@ -121,22 +124,24 @@ func (d *Day15) SolveProblem1() {
 }
 
 func (d *Day15) SolveProblem2() {
-	// d.printMap()
-	// var maxXY int64 = 20
-	// var maxXY int64 = 4000000
 
-	// for y := int64(0); y <= maxXY; y++ {
-	// 	for x := int64(0); x <= maxXY; x++ {
-	// 		var p = PointDay15{x: x, y: y}
-	// 		if d.cave[p] == nil {
-	// 			if d.checkDeatchZone(&p) == false {
-	// 				d.s2 = uint64(4000000*x + y)
-	// 				return
-	// 			}
-	// 		}
-	// 	}
-	// }
-	d.s2 = 0
+	// Idea:
+	// The one single coordinate that is not covered by a sensor
+	// must be surrounded (enclosed) by death zones of sensors:
+	// so the single coordinate MUST be just outside the death zone "radius"
+	// of a sensor.
+	// So we check all sensor border coordinates only, within the
+	// max square:
+	for _, p := range d.cave {
+		if p.ptype == 'S' {
+			var deathzone, coord = d.checkSensorBorderDeathZone(p)
+			if deathzone == false {
+				// That has to be it:
+				d.s2 = uint64(4000000*coord.x + coord.y)
+				return
+			}
+		}
+	}
 }
 
 func (d *Day15) Solution1() string {
@@ -180,48 +185,78 @@ func (d *Day15) checkDeatchZone(coord *PointDay15) bool {
 	return false
 }
 
-func (d *Day15) markDeathZones(sensor *PlaceDay15) {
+/**
+ * This method checks all coordinates around the sensor's death zone
+ * (just +1 outside the zone).
+ * If we find a coordinate that is NOT covered by any other sensor,
+ * that is the single spot needed.
+ *
+ * Returns false and the coordinate if the coordinate is at a free spot (the one we want!)
+ * Returns true (and a useless coordinate) if all coordinates around the sensor's death zone
+ * are also death zones
+ */
+func (d *Day15) checkSensorBorderDeathZone(sensor *PlaceDay15) (bool, PointDay15) {
 	var x int64 = 0
 	var y int64 = 0
-	for dt := int64(0); dt <= sensor.dist; dt++ {
+	var maxcoord int64 = d.maxCoord2
+
+	var sensorDist = sensor.dist + 1
+	for dt := int64(0); dt <= sensorDist; dt++ {
 		// top, left
 		x = sensor.coord.x - dt
-		y = sensor.coord.y - (sensor.dist - dt)
-		d.markLineX(x, sensor.coord.x, y)
-		d.markLineY(y, sensor.coord.y, x)
+		y = sensor.coord.y - (sensorDist - dt)
+		p := PointDay15{x: x, y: y}
+		if d.cave[p] != nil {
+			return true, p
+		}
+		if x < 0 || y < 0 || x > maxcoord || y > maxcoord {
+			return true, p
+		}
+		if d.checkDeatchZone(&p) == false {
+			return false, p
+		}
 
 		// top, right
 		x = sensor.coord.x - dt
-		y = sensor.coord.y + (sensor.dist - dt)
-		d.markLineX(x, sensor.coord.x, y)
-		d.markLineY(y, sensor.coord.y, x)
+		y = sensor.coord.y + (sensorDist - dt)
+		p = PointDay15{x: x, y: y}
+		if d.cave[p] != nil {
+			return true, p
+		}
+		if x < 0 || y < 0 || x > maxcoord || y > maxcoord {
+			return true, p
+		}
+		if d.checkDeatchZone(&p) == false {
+			return false, p
+		}
 
 		// bottom, left
 		x = sensor.coord.x + dt
-		y = sensor.coord.y - (sensor.dist - dt)
-		d.markLineX(x, sensor.coord.x, y)
-		d.markLineY(y, sensor.coord.y, x)
+		y = sensor.coord.y - (sensorDist - dt)
+		p = PointDay15{x: x, y: y}
+		if d.cave[p] != nil {
+			return true, p
+		}
+		if x < 0 || y < 0 || x > maxcoord || y > maxcoord {
+			return true, p
+		}
+		if d.checkDeatchZone(&p) == false {
+			return false, p
+		}
 
 		// bottom, right
 		x = sensor.coord.x + dt
-		y = sensor.coord.y + (sensor.dist - dt)
-		d.markLineX(x, sensor.coord.x, y)
-		d.markLineY(y, sensor.coord.y, x)
-	}
-}
-
-func (d *Day15) markLineX(x1 int64, x2 int64, y int64) {
-	for x := lib.Min(x1, x2); x <= lib.Max(x1, x2); x++ {
-		if d.cave[PointDay15{x: x, y: y}] == nil {
-			d.cave[PointDay15{x: x, y: y}] = &PlaceDay15{ptype: '#'}
+		y = sensor.coord.y + (sensorDist - dt)
+		p = PointDay15{x: x, y: y}
+		if d.cave[p] != nil {
+			return true, p
+		}
+		if x < 0 || y < 0 || x > maxcoord || y > maxcoord {
+			return true, p
+		}
+		if d.checkDeatchZone(&p) == false {
+			return false, p
 		}
 	}
-}
-
-func (d *Day15) markLineY(y1 int64, y2 int64, x int64) {
-	for y := lib.Min(y1, y2); y <= lib.Max(y1, y2); y++ {
-		if d.cave[PointDay15{x: x, y: y}] == nil {
-			d.cave[PointDay15{x: x, y: y}] = &PlaceDay15{ptype: '#'}
-		}
-	}
+	return true, PointDay15{x: 0, y: 0}
 }
