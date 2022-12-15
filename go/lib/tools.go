@@ -75,3 +75,10 @@ func Min[T constraints.Ordered](a T, b T) T {
 	}
 	return b
 }
+
+func AbsInt64(a int64) int64 {
+	if a < 0 {
+		return -1 * a
+	}
+	return a
+}

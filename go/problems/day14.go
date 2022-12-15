@@ -22,7 +22,7 @@ type PlaceDay14 struct {
 type Day14 struct {
 	s1       int64
 	s2       int64
-	cave     map[PointDay14]*PlaceDay14
+	cave     map[PointDay14]rune
 	caveMinX int64
 	caveMaxX int64
 	caveMinY int64
@@ -34,7 +34,7 @@ func NewDay14() Day14 {
 	return Day14{
 		s1:       0,
 		s2:       0,
-		cave:     make(map[PointDay14]*PlaceDay14),
+		cave:     make(map[PointDay14]rune),
 		caveMaxX: 0,
 		caveMaxY: 0,
 		caveMinX: math.MaxInt64,
@@ -85,10 +85,7 @@ func (d *Day14) Setup() {
 						d.caveMaxY = y
 					}
 					var coord = PointDay14{x: x, y: y}
-					d.cave[coord] = &PlaceDay14{
-						material: '#',
-						coord:    &coord,
-					}
+					d.cave[coord] = '#'
 				}
 			}
 			start = coord
@@ -166,7 +163,7 @@ func (d *Day14) drizzle(start PointDay14) bool {
 			start = target
 			continue
 		}
-		d.cave[start] = &PlaceDay14{material: 'o', coord: &start}
+		d.cave[start] = 'o'
 		return true
 	}
 }
@@ -206,7 +203,7 @@ func (d *Day14) drizzle2(start PointDay14) bool {
 		}
 
 		// else, drop it!
-		d.cave[start] = &PlaceDay14{material: 'o', coord: &start}
+		d.cave[start] = 'o'
 		return true
 	}
 }
@@ -216,8 +213,8 @@ func (d *Day14) printCave() {
 	for y := d.caveMinY; y <= d.caveMaxY; y++ {
 		for x := d.caveMinX; x <= d.caveMaxX; x++ {
 			var place = d.cave[PointDay14{x: int64(x), y: int64(y)}]
-			if place != nil {
-				fmt.Printf("%c", place.material)
+			if place != 0 {
+				fmt.Printf("%c", place)
 			} else {
 				fmt.Print(".")
 			}
@@ -229,7 +226,7 @@ func (d *Day14) printCave() {
 
 func (d *Day14) resetCave() {
 	for k, v := range d.cave {
-		if v.material != '#' {
+		if v != '#' {
 			delete(d.cave, k)
 		}
 	}
@@ -241,8 +238,8 @@ func (d *Day14) getCaveMaterial(coord PointDay14) rune {
 		return '#'
 	}
 	place := d.cave[coord]
-	if place == nil {
+	if place == 0 {
 		return ' '
 	}
-	return place.material
+	return place
 }
