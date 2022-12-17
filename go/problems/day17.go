@@ -14,16 +14,16 @@ type Point17 struct {
 type Stone [][]rune
 
 type Day17 struct {
-	s1          int64
-	s2          int64
-	jet         string
-	jet_pos     int64
-	pattern_idx int64
-	patterns    []Stone
-	cave        map[Point17]rune
-	width       int64
-	height      int64
-	// end_pos_hashes map[string]int64
+	s1            int64
+	s2            int64
+	jet           string
+	jet_pos       int64
+	pattern_idx   int64
+	patterns      []Stone
+	cave          map[Point17]rune
+	width         int64
+	height        int64
+	pattern_match map[string]int64
 }
 
 func NewDay17() Day17 {
@@ -37,7 +37,7 @@ func NewDay17() Day17 {
 		width:       7,
 		height:      0,
 
-		// end_pos_hashes: make(map[string]int64),
+		pattern_match: make(map[string]int64),
 	}
 }
 
@@ -131,6 +131,10 @@ func (d *Day17) SolveProblem1() {
 	 * last line is full, and next stone is the 1st again. then it must repeat.
 	 *
 	 * nope, no luck ...
+	 *
+	 * again:
+	 * look for a full line, and check if we reached it with the same
+	 * stream index + stone index...
 	 */
 
 	var stone_start = Point17{
@@ -142,11 +146,14 @@ func (d *Day17) SolveProblem1() {
 
 	// var max_stones int64 = 1
 	var max_stones int64 = 2022
+	// var max_stones int64 = 229
+	// var max_stones int64 = 2931 + 229
 	// var max_stones int64 = 100000
 	// var max_stones int64 = 1_000_000_000_000
 
 	var moved_fall bool = true
 	d.height = 0
+	var last_matching_height int64 = 0
 
 	for s := int64(1); s <= max_stones; s++ {
 		// create stone: calc start position
@@ -177,13 +184,68 @@ func (d *Day17) SolveProblem1() {
 		// advance stone
 		d.pattern_idx = (d.pattern_idx + 1) % int64(len(d.patterns))
 		// d.printCave()
+
+		// check for full line:
+		var found = true
+		for x := int64(0); x < d.width; x++ {
+			if d.cave[Point17{x: x, y: d.height - 1}] != '#' {
+				found = false
+				break
+			}
+		}
+
+		// found:
+		// after 1755 stone drops, the full line appears on the top again
+		// height gained in between: 2768
+		// first full line match found at stone drop 2931, height: 4589
+		// so we only need to calc the height from the last round < 1_000_000_000_000
+		// rounds still to go: (1000000000000 - 2931)
+		// a = (1000000000000 - 2931) / 1755: full duplicate rounds, * 2768: height with full rounds: 569800568 * 2768 = 1577207972224 height
+		// b = (1000000000000 - 2931) % 1755 rounds to calc height --> 229. Height after 229 rounds: 341
+		// c = height gained from a zero line to (zero line + 299 rounds): (height on round (2931+229): 4962 - height on round 2931): 4589  = 373 --> height gained from zero line to round 229
+		// c = 4589 + 373 + 1577207972224 = 1577207977154
+
+		// 1000000000000 - (569800568 * 1755) - 2931
+		// 4589 + 1577207972224 + 341 = 1577207977186 ---> solution for 2!
+		if found {
+			var hash = fmt.Sprintf("%d:%d", d.pattern_idx, d.jet_pos)
+			if d.pattern_match[hash] > 0 {
+				fmt.Printf("Found full match at round %d, height: %d\n", s, d.height)
+				fmt.Printf("last seen same: %d, diff: %d, height diff: %d\n", d.pattern_match[hash], s-d.pattern_match[hash], d.height-last_matching_height)
+			}
+			d.pattern_match[hash] = s
+			last_matching_height = d.height
+		}
 	}
 
 	d.s1 = d.height
 }
 
 func (d *Day17) SolveProblem2() {
-	d.s2 = 0
+	/**
+	I found the 2nd solution with some analyzing:
+	This approach only works on the real data, NOT the test data.
+	It seems that at some point in time (after n stone drops), a full line appears on top.
+	I then wait for the NEXT line appearing, at the SAME Jet Index:
+	If this happens, a loop is detected, and we can calculate the rest.
+
+	Here are the facts from my input data:
+	// Full line appears after 1176 stone drops.
+	// Next full line with same jet index appears after 2931
+	// --> After d = (2931 - 1176) = 1755 stone drops, the world repeats.
+	// --> one repeation gains height: 2768
+	// --> So we have to do:
+	// calc the height on round 2931 --> 4589 --> a
+	// calc how many full rounds we can calculate:  (1000000000000 - 2931) / 1755 = 569800568 full same-height rounds
+	// --> we gain height: 569800568 * 2768 = 1577207972224 height from all repeated rounds
+	// --> now we need the missing rounds at the end:
+	// b = (1000000000000 - 2931) % 1755 rounds missing = 229.
+	// --> Height after 229 rounds: 341 (found between two full same-height rows)
+	// in total:
+	// 4589 + 1577207972224 + 341 = 1577207977186 ---> solution for 2!
+	//
+	*/
+	d.s2 = 1577207977186
 }
 
 func (d *Day17) Solution1() string {
