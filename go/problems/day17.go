@@ -23,6 +23,7 @@ type Day17 struct {
 	cave        map[Point17]rune
 	width       int64
 	height      int64
+	// end_pos_hashes map[string]int64
 }
 
 func NewDay17() Day17 {
@@ -35,6 +36,8 @@ func NewDay17() Day17 {
 		cave:        make(map[Point17]rune),
 		width:       7,
 		height:      0,
+
+		// end_pos_hashes: make(map[string]int64),
 	}
 }
 
@@ -109,6 +112,27 @@ func (d *Day17) SolveProblem1() {
 	 *  +----------> +x
 	 */
 
+	/**
+	 * Idea for solution 2:
+	 * may be the gained height will repeat after the
+	 * jet and stone index are both in-sync again?
+	 * --> so find lcm(jet, stones) (least common multiplier),
+	 *  and see what happens with the height there...
+	 *
+	 * no, no pattern....
+	 *
+	 * 2nd idea: Maybe the end x positions for all stones in order will
+	 * repeat after n rounds?
+	 *
+	 * also, no.
+	 *
+	 * 3rd attempt:
+	 * We search for the same start conditions:
+	 * last line is full, and next stone is the 1st again. then it must repeat.
+	 *
+	 * nope, no luck ...
+	 */
+
 	var stone_start = Point17{
 		x: 0, y: 0,
 	}
@@ -116,51 +140,35 @@ func (d *Day17) SolveProblem1() {
 	// y pos: this is the BOTTOM of the rock
 	var stone_pos = Point17{x: 0, y: 0}
 
-	var max_stones = 2022
-	// var max_stones = 1_000_000_000_000
+	// var max_stones int64 = 1
+	var max_stones int64 = 2022
+	// var max_stones int64 = 100000
+	// var max_stones int64 = 1_000_000_000_000
 
 	var moved_fall bool = true
-	var moved_jet bool = false
 	d.height = 0
 
-	for s := 1; s <= max_stones; s++ {
+	for s := int64(1); s <= max_stones; s++ {
 		// create stone: calc start position
 		// which stone?
 		var stone = d.patterns[d.pattern_idx]
 		stone_start = Point17{x: 2, y: d.height + 3}
-		// fmt.Printf("start pos of stone: %d, height: %d\n", stone_start.y, d.height)
 
 		stone_pos = stone_start
 		moved_fall = true
 
 		// move it, until it reaches something:
 		for {
+			// did we stop falling in the last round? OK, we're done with this stone:
 			if moved_fall == false {
-				// fmt.Printf("Ground collision at x: %d, y: %d\n", stone_pos.x, stone_pos.y)
 				break
 			}
 
 			// jet movement:
-			// fmt.Printf("before jet: stone x: %d, y: %d\n", stone_pos.x, stone_pos.y)
-			stone_pos, moved_jet = d.jet_movement(stone_pos, &stone)
-			// fmt.Printf("after jet: stone x: %d, y: %d\n", stone_pos.x, stone_pos.y)
-			if moved_jet == false {
-				// fmt.Println("  no jet movement happened")
-			}
+			stone_pos, _ = d.jet_movement(stone_pos, &stone)
 
 			// fall down:
 			stone_pos, moved_fall = d.fall_down_movement(stone_pos, &stone)
-			if moved_fall == false {
-				// fmt.Printf("  no stone movement happened: %d, %d\n", stone_pos.x, stone_pos.y)
-			} else {
-				// fmt.Printf("  stone falled one to x: %d, y: %d\n", stone_pos.x, stone_pos.y)
-			}
-
-			// // if the next fall would cause a collission, stop:
-			// if d.collides(&stone, Point17{x: stone_pos.x, y: stone_pos.y - 1}) {
-			// 	fmt.Printf("Ground collision at x: %d, y: %d\n", stone_pos.x, stone_pos.y)
-			// 	break
-			// }
 		}
 
 		// update cave
@@ -191,22 +199,16 @@ func (d *Day17) jet_movement(startPos Point17, stone *Stone) (Point17, bool) {
 	var moved = false
 	var dir = d.jet[d.jet_pos]
 
-	// TODO: Colission detection
-	// fmt.Printf("Jet consideration: %d: %c\n", d.jet_pos, dir)
 	if dir == '<' && startPos.x > 0 {
-		// fmt.Printf("  Jet movement: <\n")
 		endPos.x -= 1
 		if d.collides(stone, endPos) {
-			// fmt.Printf("  Jet collieds, no movement: <\n")
 			endPos.x += 1
 		} else {
 			moved = true
 		}
 	} else if dir == '>' && (startPos.x+int64(len((*stone)[0]))) < d.width {
-		// fmt.Printf("  Jet movement: >\n")
 		endPos.x += 1
 		if d.collides(stone, endPos) {
-			// fmt.Printf("  Jet collieds, no movement: >\n")
 			endPos.x -= 1
 		} else {
 			moved = true
@@ -222,7 +224,6 @@ func (d *Day17) fall_down_movement(startPos Point17, stone *Stone) (Point17, boo
 	var endPos = startPos
 	var moved = false
 
-	// TODO: colission detection
 	if startPos.y > 0 {
 		endPos.y -= 1
 		if d.collides(stone, endPos) {
@@ -261,7 +262,6 @@ func (d *Day17) collides(stone *Stone, pos Point17) bool {
 		for x := int64(0); x < int64(len((*stone)[y])); x++ {
 			// attention: stones are in an array, so we must invert the stone's y axis
 			if (*stone)[y][x] == '#' && d.cave[Point17{y: pos.y + (h - 1 - y), x: pos.x + x}] == '#' {
-				// fmt.Printf("Collission: %c with %c\n", (*stone)[y][x], d.cave[Point17{y: pos.y + (h - 1 - y), x: pos.x + x}])
 				return true
 			}
 		}
@@ -271,6 +271,7 @@ func (d *Day17) collides(stone *Stone, pos Point17) bool {
 }
 
 func (d *Day17) printCave() {
+	fmt.Printf("\nHeight: %d\n", d.height)
 	for y := d.height + 3; y >= 0; y-- {
 		fmt.Print("|")
 		for x := int64(0); x < d.width; x++ {
