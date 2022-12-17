@@ -82,3 +82,12 @@ func AbsInt64(a int64) int64 {
 	}
 	return a
 }
+
+func Contains[T comparable](list []T, el T) bool {
+	for _, a := range list {
+		if a == el {
+			return true
+		}
+	}
+	return false
+}
