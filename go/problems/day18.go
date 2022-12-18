@@ -1,6 +1,7 @@
 package problems
 
 import (
+	"container/list"
 	"fmt"
 	"math"
 	"strconv"
@@ -67,6 +68,11 @@ func (d *Day18) Setup() {
 			z, err := strconv.ParseInt(parts[2], 10, 64)
 			lib.Check(err)
 			d.cube[Point18{x: x, y: y, z: z}] = M_Rock
+
+			// ------------- povray box output ------------------
+			// fmt.Printf("box { <%d, %d, %d>, <%d, %d, %d> scale 0.999 }\n", x, y, z, x+1, y+1, z+1)
+			// ------------- end povray box output --------------
+
 			if x < d.minCoord.x {
 				d.minCoord.x = x
 			}
@@ -87,7 +93,7 @@ func (d *Day18) Setup() {
 			}
 		}
 	}
-
+	// fmt.Printf("Cube dimension: min: %v, max: %v\n", d.minCoord, d.maxCoord)
 	// fmt.Printf("%v\n", d.cube)
 }
 
@@ -172,11 +178,11 @@ func (d *Day18) fill(p *Point18) {
 		{x: 0, y: 0, z: -1},
 	}
 
-	var todo = make([]*Point18, 1)
-	todo[0] = p
-	for len(todo) > 0 {
-		var act = todo[0]
-		todo = todo[1:]
+	var todo = list.New()
+	todo.PushBack(p)
+	for act_i := todo.Front(); act_i != nil; act_i = act_i.Next() {
+		var act = act_i.Value.(*Point18)
+		todo.Remove(act_i)
 		if d.cube[*act] == 0 {
 			d.cube[*act] = M_Water
 			for _, dt := range dirs {
@@ -189,7 +195,7 @@ func (d *Day18) fill(p *Point18) {
 				if nextPoint.x >= d.minCoord.x-1 && nextPoint.y >= d.minCoord.y-1 && nextPoint.z >= d.minCoord.z-1 &&
 					nextPoint.x <= d.maxCoord.x+1 && nextPoint.y <= d.maxCoord.y+1 && nextPoint.z <= d.maxCoord.z+1 {
 					if d.cube[nextPoint] == 0 {
-						todo = append(todo, &nextPoint)
+						todo.PushBack(&nextPoint)
 					}
 				}
 			}
