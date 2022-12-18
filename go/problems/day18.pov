@@ -9,8 +9,11 @@ global_settings {
 	ambient_light rgb<1, 1, 1>
 	assumed_gamma 1.1
 	radiosity {
-      Rad_Settings(Radiosity_Final,on,on)
-   }
+		Rad_Settings(Radiosity_Final,on,on)
+	}
+	photons {
+		spacing 0.005
+	}
 }
 background { color White }
 
@@ -30,6 +33,10 @@ light_source {
     area_light <0,0 25>, <10, 10, 0>, 20, 20
     adaptive 1
     jitter
+	photons {
+		reflection on
+		refraction on
+	}
   }
 
 
@@ -2917,6 +2924,11 @@ box { <8, 19, 13>, <9, 20, 14> scale 0.999 }
 		finish { phong 0.3 reflection 0.1  }
 	}
 	// interior { ior 1.5}
+	photons {
+		target
+		reflection on
+		refraction on
+	}
 }
 
 
@@ -2965,5 +2977,11 @@ union {
 			fade_color <0.3,0.3,0.8>
 			caustics 0.16
 		}
+	}
+
+	photons {
+		target
+		reflection on
+		refraction on
 	}
 }

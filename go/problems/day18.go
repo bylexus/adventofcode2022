@@ -16,6 +16,15 @@ type Point18 struct {
 	z int64
 }
 
+var dirs = []Point18{
+	{x: 1, y: 0, z: 0},
+	{x: -1, y: 0, z: 0},
+	{x: 0, y: 1, z: 0},
+	{x: 0, y: -1, z: 0},
+	{x: 0, y: 0, z: 1},
+	{x: 0, y: 0, z: -1},
+}
+
 type material uint
 
 const (
@@ -99,14 +108,6 @@ func (d *Day18) Setup() {
 
 func (d *Day18) SolveProblem1() {
 	var surfaces uint64 = 0
-	var dirs = []Point18{
-		{x: 1, y: 0, z: 0},
-		{x: -1, y: 0, z: 0},
-		{x: 0, y: 1, z: 0},
-		{x: 0, y: -1, z: 0},
-		{x: 0, y: 0, z: 1},
-		{x: 0, y: 0, z: -1},
-	}
 	for p := range d.cube {
 		for _, dt := range dirs {
 			if d.cube[Point18{
@@ -137,14 +138,6 @@ func (d *Day18) SolveProblem2() {
 
 	// count surfaces that touches water:
 	var surfaces uint64 = 0
-	var dirs = []Point18{
-		{x: 1, y: 0, z: 0},
-		{x: -1, y: 0, z: 0},
-		{x: 0, y: 1, z: 0},
-		{x: 0, y: -1, z: 0},
-		{x: 0, y: 0, z: 1},
-		{x: 0, y: 0, z: -1},
-	}
 	for p := range d.cube {
 		for _, dt := range dirs {
 			if d.cube[p] == M_Rock && d.cube[Point18{
@@ -169,15 +162,11 @@ func (d *Day18) Solution2() string {
 }
 
 func (d *Day18) fill(p *Point18) {
-	var dirs = []Point18{
-		{x: 1, y: 0, z: 0},
-		{x: -1, y: 0, z: 0},
-		{x: 0, y: 1, z: 0},
-		{x: 0, y: -1, z: 0},
-		{x: 0, y: 0, z: 1},
-		{x: 0, y: 0, z: -1},
-	}
-
+	// Flood fill algorithm using a Stack:
+	// Start with the given block p, mark it as "water",
+	// find its non-defined neighbours, put them in a queue / stack
+	// Repeat until the queue is empty.
+	// At the end, cube around the filled interior is flood-filled.
 	var todo = list.New()
 	todo.PushBack(p)
 	for act_i := todo.Front(); act_i != nil; {
