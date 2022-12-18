@@ -180,9 +180,8 @@ func (d *Day18) fill(p *Point18) {
 
 	var todo = list.New()
 	todo.PushBack(p)
-	for act_i := todo.Front(); act_i != nil; act_i = act_i.Next() {
+	for act_i := todo.Front(); act_i != nil; {
 		var act = act_i.Value.(*Point18)
-		todo.Remove(act_i)
 		if d.cube[*act] == 0 {
 			d.cube[*act] = M_Water
 			for _, dt := range dirs {
@@ -200,5 +199,7 @@ func (d *Day18) fill(p *Point18) {
 				}
 			}
 		}
+		todo.Remove(act_i)
+		act_i = todo.Front()
 	}
 }
