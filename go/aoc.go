@@ -30,6 +30,8 @@ func main() {
 	problem_map["16"] = &day16
 	var day17 = problems.NewDay17()
 	problem_map["17"] = &day17
+	var day18 = problems.NewDay18()
+	problem_map["18"] = &day18
 
 	var to_solve = make([]string, 0)
 	for _, arg := range os.Args[1:] {
