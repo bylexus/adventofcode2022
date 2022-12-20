@@ -60,64 +60,52 @@ func (d *Day20) SolveProblem1() {
 	// insert: [0..end_idx+1] nr [end_idx+1..]
 	// fmt.Printf("%v\n", d.numbers[0:])
 	var length = int64(len(d.numbers))
-	fmt.Printf("Length: %d\n", length)
-	for _, element := range d.numbers {
+	// fmt.Printf("Length: %d\n", length)
+	var insert_idx int64 = 0
+
+	for i := int64(0); i < length; i++ {
 		// find number by searching the orig_pos:
-		// fmt.Printf("before move: %v\n", d.nrToString())
+		var start_idx = d.findIndexOfOrigPos(i)
+		var element = d.numbers[start_idx]
+
+		// fmt.Printf("before move: %v\n", d.numbers)
 		// fmt.Printf("moving Nr: %d\n", element.nr)
 
 		if element.nr == 0 {
 			continue
 		}
 
-		// calc new end pos:
-		var end_idx = element.act_pos
+		// remove actual element from list:
+		var tmp = make([]*Number20, 0)
+		tmp = append(tmp, d.numbers[:start_idx]...)
+		tmp = append(tmp, d.numbers[start_idx+1:]...)
+		// fmt.Printf("after remove: %v\n", tmp)
+
+		// calc insert pos:
 		if element.nr > 0 {
-			for i := int64(0); i < element.nr; i++ {
-				end_idx += 1
-				// if it wraps, we set the index AFTER the first element, as it is a ring buffer:
-				if end_idx >= length {
-					end_idx = 1
-				}
-			}
+			insert_idx = (start_idx + element.nr - 1) % (length - 1)
+			// insert AFTER insert_idx:
+			var tmp2 = make([]*Number20, 0)
+			tmp2 = append(tmp2, tmp[:insert_idx+1]...)
+			tmp2 = append(tmp2, element)
+			tmp2 = append(tmp2, tmp[insert_idx+1:]...)
+			tmp = tmp2
 		} else {
-			for i := element.nr; i < 0; i++ {
-				end_idx -= 1
-				// if it wraps, we set the index BEFORE the last element, as it is a ring buffer:
-				if end_idx < 0 {
-					end_idx = length - 2
-				}
-			}
+			// --> (len + (start + nr) % len) % 6
+			var l = length - 1
+			insert_idx = (l + (start_idx+element.nr-1)%l) % l
+			// insert AFTER insert_idx:
+			var tmp2 = make([]*Number20, 0)
+			tmp2 = append(tmp2, tmp[:insert_idx+1]...)
+			tmp2 = append(tmp2, element)
+			tmp2 = append(tmp2, tmp[insert_idx+1:]...)
+			tmp = tmp2
 		}
 
-		// shifting ring:
-		var start_pos = element.act_pos
-		for _, e := range d.numbers {
-			// shift right
-			if e != element {
-				if start_pos > end_idx {
-					if e.act_pos < start_pos && e.act_pos >= end_idx {
-						e.act_pos += 1
-					}
-				} else if start_pos < end_idx {
-					// shift left
-					if e.act_pos > start_pos && e.act_pos <= end_idx {
-						e.act_pos -= 1
-					}
-				}
-
-			}
-			element.act_pos = end_idx
-		}
-
-		// d.numbers = tmp
-		// fmt.Printf("after move: %v\n\n", d.nrToString())
+		d.numbers = tmp
+		// fmt.Printf("after move: %v\n\n", d.numbers)
 	}
 
-	// fmt.Printf("after move: %v\n\n", d.numbers)
-	sort.Slice(d.numbers, func(i, j int) bool {
-		return d.numbers[i].act_pos < d.numbers[j].act_pos
-	})
 	// fmt.Printf("after move: %v\n\n", d.numbers)
 	var zero_idx = d.findIndexOfNr(0)
 	var nr_1000 = d.numbers[(zero_idx+1000)%int64(len(d.numbers))].nr

@@ -11,7 +11,7 @@
 			"request": "launch",
 			"mode": "auto",
 			"program": "go/aoc.go",
-			"args": ["17"]
+			"args": ["20"]
 		}
 	]
 }
