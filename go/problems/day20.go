@@ -101,7 +101,7 @@ func (d *Day20) SolveProblem1() {
 		act = act.next
 	}
 	var nr_3000 = act.nr
-	fmt.Printf("1000: %d, 2000: %d, 3000: %d\n", nr_1000, nr_2000, nr_3000)
+	// fmt.Printf("1000: %d, 2000: %d, 3000: %d\n", nr_1000, nr_2000, nr_3000)
 
 	d.s1 = nr_1000 + nr_2000 + nr_3000
 }
@@ -133,8 +133,7 @@ func (d *Day20) SolveProblem2() {
 		act = act.next
 	}
 	var nr_3000 = act.nr
-	fmt.Printf("1000: %d, 2000: %d, 3000: %d\n", nr_1000, nr_2000, nr_3000)
-	fmt.Printf("1000: %d, 2000: %d, 3000: %d\n", nr_1000, nr_2000, nr_3000)
+	// fmt.Printf("1000: %d, 2000: %d, 3000: %d\n", nr_1000, nr_2000, nr_3000)
 
 	d.s2 = nr_1000 + nr_2000 + nr_3000
 }
