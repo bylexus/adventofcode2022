@@ -5,6 +5,7 @@ import (
 	"os"
 	"sort"
 	"strings"
+	"sync"
 	"time"
 
 	"alexi.ch/aoc/2022/problems"
@@ -12,32 +13,21 @@ import (
 
 func main() {
 	tannenbaum()
-	var problem_map = make(map[string](problems.Problem))
-
-	var day01 = problems.NewDay01()
-	problem_map["01"] = &day01
-	var day11 = problems.NewDay11()
-	problem_map["11"] = &day11
-	var day12 = problems.NewDay12()
-	problem_map["12"] = &day12
-	var day13 = problems.NewDay13()
-	problem_map["13"] = &day13
-	var day14 = problems.NewDay14()
-	problem_map["14"] = &day14
-	var day15 = problems.NewDay15()
-	problem_map["15"] = &day15
-	var day16 = problems.NewDay16()
-	problem_map["16"] = &day16
-	var day17 = problems.NewDay17()
-	problem_map["17"] = &day17
-	var day18 = problems.NewDay18()
-	problem_map["18"] = &day18
-	var day19 = problems.NewDay19()
-	problem_map["19"] = &day19
-	var day20 = problems.NewDay20()
-	problem_map["20"] = &day20
-	var day21 = problems.NewDay21()
-	problem_map["21"] = &day21
+	var problem_map = map[string](func() problems.Problem){
+		"01": func() problems.Problem { p := problems.NewDay01(); return &p },
+		"11": func() problems.Problem { p := problems.NewDay11(); return &p },
+		"12": func() problems.Problem { p := problems.NewDay12(); return &p },
+		"13": func() problems.Problem { p := problems.NewDay13(); return &p },
+		"14": func() problems.Problem { p := problems.NewDay14(); return &p },
+		"15": func() problems.Problem { p := problems.NewDay15(); return &p },
+		"16": func() problems.Problem { p := problems.NewDay16(); return &p },
+		"17": func() problems.Problem { p := problems.NewDay17(); return &p },
+		"18": func() problems.Problem { p := problems.NewDay18(); return &p },
+		"19": func() problems.Problem { p := problems.NewDay19(); return &p },
+		"20": func() problems.Problem { p := problems.NewDay20(); return &p },
+		"21": func() problems.Problem { p := problems.NewDay21(); return &p },
+		"22": func() problems.Problem { p := problems.NewDay22(); return &p },
+	}
 
 	var to_solve = make([]string, 0)
 	for _, arg := range os.Args[1:] {
@@ -53,15 +43,22 @@ func main() {
 		to_solve = keys
 	}
 
+	// Run solving all problems  in parallel:
 	var start = time.Now()
+	var wg sync.WaitGroup
 	for _, p := range to_solve {
-		var prob = problem_map[p]
-		if prob != nil {
-			problems.Solve(prob)
-		} else {
-			panic("Problem not found")
-		}
+		wg.Add(1)
+		go func(probKey string) {
+			defer wg.Done()
+			var prob = problem_map[probKey]
+			if prob != nil {
+				problems.Solve(prob())
+			} else {
+				panic("Problem not found")
+			}
+		}(p)
 	}
+	wg.Wait()
 	var duration = time.Now().Sub(start)
 	fmt.Printf("\n\nFull runtime: %s\n\n", duration)
 }
