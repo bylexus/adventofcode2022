@@ -27,6 +27,7 @@ func main() {
 		"20": func() problems.Problem { p := problems.NewDay20(); return &p },
 		"21": func() problems.Problem { p := problems.NewDay21(); return &p },
 		"22": func() problems.Problem { p := problems.NewDay22(); return &p },
+		"23": func() problems.Problem { p := problems.NewDay23(); return &p },
 	}
 
 	var to_solve = make([]string, 0)
