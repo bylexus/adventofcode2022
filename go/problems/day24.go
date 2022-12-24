@@ -2,6 +2,7 @@ package problems
 
 import (
 	"fmt"
+	"sort"
 
 	"alexi.ch/aoc/2022/lib"
 )
@@ -19,24 +20,28 @@ type mapentry []rune
 type mapdata [][]mapentry
 
 type Coord24 struct {
-	x      int
-	y      int
-	minute int
+	x int
+	y int
 }
 
 type Day24 struct {
-	s1          int
-	s2          int
-	startmap    mapdata
-	stored_maps map[int]*mapdata
+	s1            int
+	s2            int
+	startmap      mapdata
+	stored_maps   map[int]*mapdata
+	best_solution int
+	map_hashes    map[string]int
+	place_hashes  map[Coord24]([]string)
 }
 
 func NewDay24() Day24 {
 	return Day24{
-		s1:          0,
-		s2:          0,
-		startmap:    make(mapdata, 0),
-		stored_maps: make(map[int]*mapdata),
+		s1:           0,
+		s2:           0,
+		startmap:     make(mapdata, 0),
+		stored_maps:  make(map[int]*mapdata),
+		map_hashes:   make(map[string]int),
+		place_hashes: make(map[Coord24][]string),
 	}
 }
 
@@ -60,12 +65,29 @@ func (d *Day24) Setup() {
 			d.startmap = append(d.startmap, entries)
 		}
 	}
+
+	// calc all map hashes
+	var minute = 1
+	// var actmap = d.nextBlizzardMap(&d.startmap)
+	d.stored_maps[0] = &d.startmap
+	for y := 1; y < len(d.startmap)-1; y++ {
+		for x := 1; x < len(d.startmap[0])-1; x++ {
+			var actmap = d.nextBlizzardMap(d.stored_maps[minute-1])
+			var hash = fmt.Sprintf("%v", actmap)
+			d.stored_maps[minute] = &actmap
+			d.map_hashes[hash] = minute
+			minute++
+		}
+	}
+	fmt.Printf("hashes: %d\n", len(d.map_hashes))
 	d.printMap(&d.startmap)
 }
 
 func (d *Day24) SolveProblem1() {
 	// var rounds = 0
 	// var nextmap = d.startmap
+
+	d.best_solution = 0
 
 	var start = Coord24{x: 0, y: 0}
 	var end = Coord24{x: 0, y: len(d.startmap) - 1}
@@ -89,39 +111,23 @@ func (d *Day24) SolveProblem1() {
 	fmt.Printf("Start at: %v\n", start)
 	fmt.Printf("End at: :%v\n", end)
 
-	// breath first search with a queue:
-	// fill the queue with the 1st position in minute 1 (down)
+	// depth-First-Search with a recursive algorithm:
+	// start with the start position in minute 0.
 	//
-	// as long as the queue is not empty:
-	// take the front item
-	// check: is it at the end position? ok, got it, done!
-	//
-	// check if it occupies an empty space in that minute. If not, skip (not a valid location)
-	// if yes, collect all possible next steps, put them at the end of the queue with minute + 1
+	// check function: (takes actual minute)
+	// check if I occupy an empty space. If not, return -1 (not a valid route)
+	// if yes, collect all possible next steps.
+	// if one of the next steps is the exit, return the number of steps (minutes) and end the process
+	// call check function for each valid step with minute+1
 
-	var queue = make([]Coord24, 1)
-	queue[0] = Coord24{x: start.x, y: start.y + 1, minute: 1}
-	for {
-		if len(queue) == 0 {
-			break
-		}
-		var act = &queue[0]
-		queue = queue[1:]
-		// found the first one that reaches the exit:
-		if act.x == end.x && act.y == end.y {
-			d.s1 = act.minute
-			break
-		}
-		// fmt.Printf("queue len: %d\n", len(queue))
-		queue = d.appendNextStepsToQueue(act, queue, &start, &end)
-	}
+	var res = d.checkMinute(1, Coord24{x: start.x, y: start.y + 1}, &start, &end)
 
 	// for i := 1; i <= rounds; i++ {
 	// 	nextmap = d.nextBlizzardMap(&nextmap)
 	// 	fmt.Printf("Round: %d\n", i)
 	// 	d.printMap(&nextmap)
 	// }
-	// d.s1 = 0
+	d.s1 = res
 }
 
 func (d *Day24) SolveProblem2() {
@@ -210,79 +216,67 @@ func (d *Day24) nextBlizzardMap(act *mapdata) mapdata {
 	return next
 }
 
-func (d *Day24) appendNextStepsToQueue(pos *Coord24, queue []Coord24, start *Coord24, target *Coord24) []Coord24 {
-	// pre-cache map for actual minute:
-	var actmap = d.stored_maps[pos.minute]
-	if actmap == nil {
-		var newmap = d.nextBlizzardMap(d.stored_maps[pos.minute-1])
-		actmap = &newmap
-		d.stored_maps[pos.minute] = actmap
+func (d *Day24) checkMinute(minute int, pos Coord24, start *Coord24, target *Coord24) int {
+	if d.best_solution > 0 && d.best_solution <= minute {
+		// there is already a better solution
+		return -1
 	}
-
-	// pre-cache map for NEXT minute:
-	var nextmap = d.stored_maps[pos.minute+1]
-	if nextmap == nil {
-		var newmap = d.nextBlizzardMap(d.stored_maps[pos.minute])
-		nextmap = &newmap
-		d.stored_maps[pos.minute+1] = nextmap
-	}
-
-	var actMinute = pos.minute
-
 	// invalid location (out of bounds):
 	if pos.x < 0 || pos.y < 0 || pos.y >= len(d.startmap) || pos.x >= len(d.startmap[0]) {
-		return queue
+		return -1
 	}
 	// invalid location (start pos):
-	if pos.x == start.x && pos.y == start.y {
-		return queue
+	if pos == *start {
+		return -1
 	}
+
 	// fmt.Printf("Minute %d: Working on loc: %v\n", minute, pos)
+
+	// get (cached) map for actual minute:
+	var actmap = d.stored_maps[minute]
+	if actmap == nil {
+		var newmap = d.nextBlizzardMap(d.stored_maps[minute-1])
+		actmap = &newmap
+		d.stored_maps[minute] = actmap
+	}
+
+	// if we were here already, in a room with the same hash, we're in a loop: return
+	var hash = fmt.Sprintf("%v", actmap)
+	for _, v := range d.place_hashes[pos] {
+		if hash == v {
+			return -1
+		}
+	}
+	d.place_hashes[pos] = append(d.place_hashes[pos], hash)
 
 	// am I in a blizzard, or in a wall?
 	if len((*actmap)[pos.y][pos.x]) > 0 {
 		// yes, so this is the wrong way
-		return queue
+		return -1
 	}
 
-	// // am I on the exit? Yay!
-	// if *pos == *target {
-	// 	pos.minute = actMinute
-	// 	return queue
-	// }
+	// am I on the exit? Yay!
+	if pos == *target {
+		d.best_solution = minute
+		return minute
+	}
 
-	// ok, clear grounds, go ahead and fill the next locations
+	// ok, clear grounds, go ahead and search forward
 	// check each direction, and the "wait" direction recursively, if we find an exit:
+	var valid_solutions = make([]int, 0)
 	for _, dir := range dirs24 {
-		var loc = Coord24{
-			x:      pos.x + dir.x,
-			y:      pos.y + dir.y,
-			minute: actMinute + 1,
+		var nextPos = Coord24{x: pos.x + dir.x, y: pos.y + dir.y}
+		var res = d.checkMinute(minute+1, nextPos, start, target)
+		if res > 0 {
+			// return res
+			// fmt.Printf("Found solution: %d\n", res)
+			valid_solutions = append(valid_solutions, res)
 		}
-		// skip start:
-		if loc.x == start.x && loc.y == start.y {
-			continue
-		}
-		// invalid location (out of bounds):
-		if loc.x < 0 || loc.y < 0 || loc.y >= len(d.startmap) || loc.x >= len(d.startmap[0]) {
-			continue
-		}
-		// skip wall:
-		if len(d.startmap[loc.y][loc.x]) > 0 && d.startmap[loc.y][loc.x][0] == '#' {
-			continue
-		}
-		// skip blizzard location in NEXT map:
-		if len((*nextmap)[loc.y][loc.x]) > 0 {
-			continue
-		}
-
-		queue = append(queue, loc)
 	}
-	return queue
-	// var valid_solutions = make([]int, 0)
-	// if len(valid_solutions) > 0 {
-	// 	sort.Ints(valid_solutions)
-	// 	return valid_solutions[0]
-	// }
+	if len(valid_solutions) > 0 {
+		sort.Ints(valid_solutions)
+		return valid_solutions[0]
+	}
 
+	return -1
 }
