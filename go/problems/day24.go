@@ -24,24 +24,29 @@ type Coord24 struct {
 	y int
 }
 
+type PlaceHashCombo struct {
+	place Coord24
+	hash  string
+}
+
 type Day24 struct {
-	s1            int
-	s2            int
-	startmap      mapdata
-	stored_maps   map[int]*mapdata
-	best_solution int
-	map_hashes    map[string]int
-	place_hashes  map[Coord24]([]string)
+	s1                  int
+	s2                  int
+	startmap            mapdata
+	map_per_minute      map[int]*mapdata
+	best_solution       int
+	map_hash_per_minute map[int]string
+	place_hashes        map[PlaceHashCombo]bool
 }
 
 func NewDay24() Day24 {
 	return Day24{
-		s1:           0,
-		s2:           0,
-		startmap:     make(mapdata, 0),
-		stored_maps:  make(map[int]*mapdata),
-		map_hashes:   make(map[string]int),
-		place_hashes: make(map[Coord24][]string),
+		s1:                  0,
+		s2:                  0,
+		startmap:            make(mapdata, 0),
+		map_per_minute:      make(map[int]*mapdata),
+		map_hash_per_minute: make(map[int]string),
+		place_hashes:        make(map[PlaceHashCombo]bool),
 	}
 }
 
@@ -66,20 +71,29 @@ func (d *Day24) Setup() {
 		}
 	}
 
-	// calc all map hashes
-	var minute = 1
+	// calc all maps and hashes per minute
 	// var actmap = d.nextBlizzardMap(&d.startmap)
-	d.stored_maps[0] = &d.startmap
-	for y := 1; y < len(d.startmap)-1; y++ {
-		for x := 1; x < len(d.startmap[0])-1; x++ {
-			var actmap = d.nextBlizzardMap(d.stored_maps[minute-1])
-			var hash = fmt.Sprintf("%v", actmap)
-			d.stored_maps[minute] = &actmap
-			d.map_hashes[hash] = minute
-			minute++
+	d.map_per_minute[0] = &d.startmap
+	d.map_hash_per_minute[0] = d.hashMap(&d.startmap)
+
+	var minute = 1
+	var seen_hashes = make([]string, 1)
+	seen_hashes[0] = d.map_hash_per_minute[0]
+
+	for i := 0; i < len(d.startmap)*len(d.startmap[0]); i++ {
+		var actmap = d.nextBlizzardMap(d.map_per_minute[minute-1])
+		var hash = d.hashMap(&actmap)
+
+		if lib.Contains(seen_hashes, hash) {
+			break
 		}
+		seen_hashes = append(seen_hashes, hash)
+		d.map_per_minute[minute] = &actmap
+		d.map_hash_per_minute[minute] = hash
+		minute += 1
 	}
-	fmt.Printf("hashes: %d\n", len(d.map_hashes))
+
+	fmt.Printf("hashes: %d\n", len(d.map_hash_per_minute))
 	d.printMap(&d.startmap)
 }
 
@@ -106,7 +120,7 @@ func (d *Day24) SolveProblem1() {
 	}
 
 	// store first map:
-	d.stored_maps[0] = &d.startmap
+	// d.stored_maps[0] = &d.startmap
 
 	fmt.Printf("Start at: %v\n", start)
 	fmt.Printf("End at: :%v\n", end)
@@ -233,21 +247,15 @@ func (d *Day24) checkMinute(minute int, pos Coord24, start *Coord24, target *Coo
 	// fmt.Printf("Minute %d: Working on loc: %v\n", minute, pos)
 
 	// get (cached) map for actual minute:
-	var actmap = d.stored_maps[minute]
-	if actmap == nil {
-		var newmap = d.nextBlizzardMap(d.stored_maps[minute-1])
-		actmap = &newmap
-		d.stored_maps[minute] = actmap
-	}
+	var minute_mod = len(d.map_hash_per_minute)
+	var actmap = d.map_per_minute[minute%minute_mod]
 
 	// if we were here already, in a room with the same hash, we're in a loop: return
-	var hash = fmt.Sprintf("%v", actmap)
-	for _, v := range d.place_hashes[pos] {
-		if hash == v {
-			return -1
-		}
+	var hash = d.map_hash_per_minute[minute%minute_mod]
+	if d.place_hashes[PlaceHashCombo{place: pos, hash: hash}] == true {
+		return -1
 	}
-	d.place_hashes[pos] = append(d.place_hashes[pos], hash)
+	d.place_hashes[PlaceHashCombo{place: pos, hash: hash}] = true
 
 	// am I in a blizzard, or in a wall?
 	if len((*actmap)[pos.y][pos.x]) > 0 {
@@ -279,4 +287,8 @@ func (d *Day24) checkMinute(minute int, pos Coord24, start *Coord24, target *Coo
 	}
 
 	return -1
+}
+
+func (d *Day24) hashMap(m *mapdata) string {
+	return fmt.Sprintf("%v", m)
 }
