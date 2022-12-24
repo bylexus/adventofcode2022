@@ -36,7 +36,7 @@ type Day24 struct {
 	map_per_minute      map[int]*mapdata
 	best_solution       int
 	map_hash_per_minute map[int]string
-	place_hashes        map[PlaceHashCombo]bool
+	place_hashes        map[PlaceHashCombo]int
 }
 
 func NewDay24() Day24 {
@@ -46,7 +46,7 @@ func NewDay24() Day24 {
 		startmap:            make(mapdata, 0),
 		map_per_minute:      make(map[int]*mapdata),
 		map_hash_per_minute: make(map[int]string),
-		place_hashes:        make(map[PlaceHashCombo]bool),
+		place_hashes:        make(map[PlaceHashCombo]int),
 	}
 }
 
@@ -134,18 +134,72 @@ func (d *Day24) SolveProblem1() {
 	// if one of the next steps is the exit, return the number of steps (minutes) and end the process
 	// call check function for each valid step with minute+1
 
-	var res = d.checkMinute(1, Coord24{x: start.x, y: start.y + 1}, &start, &end)
+	// 1st round, solution 1
+	var sum = 0
+	var minute = 1
+	var s1 = 0
+	// wait until I can move out of the start position:
+	for {
+		var tmpmap = d.map_per_minute[minute%len(d.map_hash_per_minute)]
+		if len((*tmpmap)[start.y+1][start.x]) == 0 {
+			break
+		}
+		minute += 1
+	}
+	s1 = d.checkMinute(minute, Coord24{x: start.x, y: start.y + 1}, &start, &end)
+	sum += s1
+
+	// 2nd round: back to the start:
+	fmt.Println("2nd round")
+	d.best_solution = 0
+	d.place_hashes = make(map[PlaceHashCombo]int)
+	var new_start = Coord24{x: end.x, y: end.y}
+	var new_end = Coord24{x: start.x, y: start.y}
+	var s2 = 0
+	minute = s1 + 1
+	// wait until I can move out of the start position:
+	for {
+		var tmpmap = d.map_per_minute[minute%len(d.map_hash_per_minute)]
+		if len((*tmpmap)[new_start.y-1][new_start.x]) == 0 {
+			break
+		}
+		fmt.Println("Wait for start...")
+		minute += 1
+	}
+	s2 = d.checkMinute(minute, Coord24{x: new_start.x, y: new_start.y - 1}, &new_start, &new_end)
+	sum += s2
+	fmt.Printf("Back home: %d\n", s2)
+
+	// 3rd round: to the end again!
+	fmt.Println("3rd round")
+	d.best_solution = 0
+	d.place_hashes = make(map[PlaceHashCombo]int)
+	var s3 = 0
+	minute = s2 + 1
+	// wait until I can move out of the start position:
+	for {
+		var tmpmap = d.map_per_minute[minute%len(d.map_hash_per_minute)]
+		if len((*tmpmap)[start.y+1][start.x]) == 0 {
+			break
+		}
+		fmt.Println("Wait for start...")
+		minute += 1
+	}
+	s3 = d.checkMinute(minute, Coord24{x: start.x, y: start.y + 1}, &start, &end)
+	sum += s3
+	fmt.Printf("Back home: %d\n", s3)
 
 	// for i := 1; i <= rounds; i++ {
 	// 	nextmap = d.nextBlizzardMap(&nextmap)
 	// 	fmt.Printf("Round: %d\n", i)
 	// 	d.printMap(&nextmap)
 	// }
-	d.s1 = res
+	d.s1 = s1
+	d.s2 = s3
 }
 
 func (d *Day24) SolveProblem2() {
-	d.s2 = 0
+	// d.s2 = 0
 }
 
 func (d *Day24) Solution1() string {
@@ -240,9 +294,9 @@ func (d *Day24) checkMinute(minute int, pos Coord24, start *Coord24, target *Coo
 		return -1
 	}
 	// invalid location (start pos):
-	if pos == *start {
-		return -1
-	}
+	// if pos == *start {
+	// 	return -2
+	// }
 
 	// fmt.Printf("Minute %d: Working on loc: %v\n", minute, pos)
 
@@ -252,10 +306,10 @@ func (d *Day24) checkMinute(minute int, pos Coord24, start *Coord24, target *Coo
 
 	// if we were here already, in a room with the same hash, we're in a loop: return
 	var hash = d.map_hash_per_minute[minute%minute_mod]
-	if d.place_hashes[PlaceHashCombo{place: pos, hash: hash}] == true {
+	if d.place_hashes[PlaceHashCombo{place: pos, hash: hash}] > 0 && d.place_hashes[PlaceHashCombo{place: pos, hash: hash}] <= minute {
 		return -1
 	}
-	d.place_hashes[PlaceHashCombo{place: pos, hash: hash}] = true
+	d.place_hashes[PlaceHashCombo{place: pos, hash: hash}] = minute
 
 	// am I in a blizzard, or in a wall?
 	if len((*actmap)[pos.y][pos.x]) > 0 {
